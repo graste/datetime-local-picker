@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>datetime-local-picker</title>
+</head>
+<body>
+
+<h1>datetime-local-picker</h1>
+
+<div class="dtp">
+    <label for="datetimepicker" class="dtp__label">Datetime:</label>
+    <input type="text" id="datetimepicker" class="dtp__input">
+    <button class="dtp__trigger" id="datetimepicker-trigger">trigger</button>
+</div>
+
+<script src="bower_components/requirejs/require.js"></script>
+<script>
+require.config({
+    baseUrl: './',
+    enforceDefine: true
+});
+require(['src/DatetimeLocalPicker'], function(dtlp) {
+    var picker = new dtlp({
+        inputElement: '#datetimepicker',
+        triggerElement: '#datetimepicker-trigger',
+        minDate: new Date('2010-01-01'),
+        maxDate: new Date('2019-12-31'),
+        yearRange: {
+            before: 5,
+            after: 5
+        },
+        showTime: true
+    });
+});
+</script>
+
+</body>
+</html>
