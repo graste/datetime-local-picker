@@ -186,12 +186,23 @@
         even: 'more'
     };
 
-    function getRandomString() {
-        return (Math.random().toString(36)+'00000000000000000').slice(2, 10);
+    function DatetimeLocalPicker(settings) {
+        var self = this;
+
+        self.configure(settings || {});
+
+        if (self.$triggerElement) {
+            self.$triggerElement.on(
+                'click.' + self.settings.logPrefix,
+                function(ev) {
+                    self.draw();
+                }
+            );
+        }
     }
 
-    function DatetimeLocalPicker(settings) {
-        this.configure(settings || {});
+    function getRandomString() {
+        return (Math.random().toString(36)+'00000000000000000').slice(2, 10);
     }
 
     DatetimeLocalPicker.prototype = {
@@ -201,18 +212,10 @@
             return new_date.isValid() ? new_date : false;
         },
 
-        setMinDate: function(mixed) {
-            this.settings.minDate = this.parseDate(this.settings.minDate);
-            return this.consolidateMinMaxDates();
-        },
+        setMinMaxDate: function(min, max) {
+            this.settings.minDate = this.parseDate(min);
+            this.settings.maxDate = this.parseDate(max);
 
-        setMaxDate: function(mixed) {
-            this.settings.maxDate = this.parseDate(this.settings.maxDate);
-            return this.consolidateMinMaxDates();
-        },
-
-        consolidateMinMaxDates: function() {
-            // swap min/max dates if they are in "wrong" order
             if ((this.settings.minDate && this.settings.maxDate) && this.settings.maxDate.isBefore(this.settings.minDate)) {
                 var temp = this.settings.maxDate.clone();
                 this.settings.maxDate = this.settings.minDate.clone();
@@ -240,7 +243,7 @@
 
         configure: function(settings) {
             if (!this.settings) {
-                this.settings = $.extend(true, {}, defaults);
+                this.settings = $.extend(true, {}, default_settings);
             }
 
             this.settings = $.extend(true, {}, default_settings, this.settings, settings);
@@ -254,10 +257,17 @@
             this.settings.isRTL = !!this.settings.isRTL;
 
             // check for a valid given locale to use and store that in settings (as it might be invalid/unknown)
-            this.settings.locale = moment().locale(this.settings.locale);
+            var m = moment();
+            var locale = m.locale(this.settings.locale);
+            this.settings.locale = m.locale();
+
+            this.$inputElement = $(this.settings.inputElement);
+            this.$containerElement = this.settings.containerElement ? $(this.settings.containerElement) : null;
 
             // use the input element as trigger element when no specific trigger was given
-            this.settings.triggerElement = this.triggerElement || this.settings.inputElement;
+            this.settings.triggerElement = this.settings.triggerElement || this.settings.inputElement;
+            this.$triggerElement = $(this.settings.triggerElement);
+
 
             //if (!_.isArray(this.settings.inputFormats)) {
             //    throw new Error('The inputFormats must be an array of dates or date strings.');
@@ -268,8 +278,7 @@
             var nom = parseInt(this.settings.numberOfMonths, 10) || 1;
             this.settings.numberOfMonths = nom > 12 ? 12 : nom;
 
-            this.setMinDate(this.settings.minDate);
-            this.setMaxDate(this.settings.maxDate);
+            this.setMinMaxDate(this.settings.minDate, this.settings.maxDate);
         }
 
     };

@@ -12,19 +12,27 @@
 <div class="dtp">
     <label for="datetimepicker" class="dtp__label">Datetime:</label>
     <input type="text" id="datetimepicker" class="dtp__input">
-    <button class="dtp__trigger" id="datetimepicker-trigger">trigger</button>
+    <button class="dtp__trigger" id="datetimepickerTrigger">trigger</button>
+    <div class="dtp__container" id="datetimepickerContainer">
+    </div>
 </div>
 
 <script src="bower_components/requirejs/require.js"></script>
 <script>
 require.config({
     baseUrl: './',
+    paths: {
+        'jquery': 'bower_components/jquery/dist/jquery.min',
+        'lodash': 'bower_components/lodash/dist/lodash.min',
+        'moment': 'bower_components/moment/min/moment-with-locales.min'
+    },
     enforceDefine: true
 });
 require(['src/DatetimeLocalPicker'], function(dtlp) {
     var picker = new dtlp({
         inputElement: '#datetimepicker',
-        triggerElement: '#datetimepicker-trigger',
+        triggerElement: '#datetimepickerTrigger',
+        containerElement: '#datetimepickerContainer',
         minDate: new Date('2010-01-01'),
         maxDate: new Date('2019-12-31'),
         yearRange: {
@@ -33,6 +41,7 @@ require(['src/DatetimeLocalPicker'], function(dtlp) {
         },
         showTime: true
     });
+    foo = picker;
 });
 </script>
 
