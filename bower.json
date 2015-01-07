@@ -1,0 +1,43 @@
+{
+  "name": "datetime-local-picker",
+  "version": "0.1.0",
+  "homepage": "https://github.com/graste/datetime-local-picker",
+  "authors": [
+    "Steffen Gransow <graste@mivesto.de>"
+  ],
+  "description": "AMD compatible javascript datetime picker for HTML5 form input types",
+  "main": "src/DatetimeLocalPicker.js",
+  "moduleType": [
+    "amd"
+  ],
+  "dependencies": {
+    "lodash": "~2.4.1",
+    "lodash-template-loader": "~0.1.7",
+    "jquery": "~2.1.3"
+  },
+  "devDependencies": {
+    "requirejs": "~2.1.8"
+  },
+  "keywords": [
+    "javascript",
+    "amd",
+    "html5",
+    "forms",
+    "input",
+    "datetime",
+    "date",
+    "time",
+    "picker",
+    "datepicker",
+    "datetime picker"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

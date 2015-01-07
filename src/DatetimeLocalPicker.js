@@ -1,7 +1,6 @@
-// Uses Node, AMD or browser globals to create a module.
-(function (root, factory) {
+;(function (factory) {
+    // register as anonymous module, AMD style
     if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
         define(
             [
                 'jquery',
@@ -14,32 +13,20 @@
                 // and error.requireModules (an array of module ids/paths)
             }
         );
-    } else if (typeof exports === 'object') {
-        // Node. Does not work with strict CommonJS, but only CommonJS-like environments that support module.exports, like Node.
-        module.exports = factory(
-            require('jquery'),
-            require('lodash'),
-            require('moment')
-        );
-    } else {
-        // Browser globals (root is window)
-        root.DatetimeLocalPicker = factory(
-            root.jQuery,
-            root._,
-            root.moment
-        );
     }
-}(this, function ($, _, moment) {
+}(function ($, _, moment) {
 
     'use strict';
 
     var default_settings = {
         inputElement: null,
+        triggerElement: null,
         containerElement: null,
         utcOffsetElement: null,
+        locale: null,
 
         inputFormats: null,
-        outputFormats: null,
+        outputFormat: null,
         parseStrict: false,
         parseHuman: false,
 
@@ -197,21 +184,28 @@
         return (Math.random().toString(36)+'00000000000000000').slice(2, 10);
     }
 
-    var DatetimeLocalPicker = function(settings) {
+    function DatetimeLocalPicker(settings) {
         this.configure(settings || {});
-    };
+    }
 
-    DatetimeLocalPicker.prototype.configure = function(settings) {
-        if (!this.settings) {
-            this.settings = $.extend(true, {}, defaults);
-        }
+    DatetimeLocalPicker.prototype = {
 
-        this.settings = $.extend(true, {}, default_settings, this.settings, settings);
+        configure: function(settings) {
+            if (!this.settings) {
+                this.settings = $.extend(true, {}, defaults);
+            }
 
-        // add (randomized) log prefix to instance
-        this.log_prefix = this.settings.log_prefix || 'DatetimeLocalPicker';
-        if (!this.settings.randomize_log_prefix || this.settings.randomize_log_prefix === true || this.settings.log_prefix === "") {
-            this.log_prefix += "#" + getRandomString();
+            this.settings = $.extend(true, {}, default_settings, this.settings, settings);
+
+            // add (randomized) log prefix to instance
+            this.log_prefix = this.settings.log_prefix || 'DatetimeLocalPicker';
+            if (!this.settings.randomize_log_prefix || this.settings.randomize_log_prefix === true || this.settings.log_prefix === "") {
+                this.log_prefix += "#" + getRandomString();
+            }
+
+            this.settings.isRTL = !!this.settings.isRTL;
+
+
         }
 
     };
