@@ -9,14 +9,16 @@
 
 <h1>datetime-local-picker</h1>
 
-<div class="dtp">
+<div class="dtp" touch-action="none">
     <label for="datetimepicker" class="dtp__label">Datetime:</label>
     <input type="text" id="datetimepicker" class="dtp__input">
     <button class="dtp__trigger" id="datetimepickerTrigger">trigger</button>
     <div class="dtp__container" id="datetimepickerContainer">
     </div>
 </div>
+<div id="output"></div>
 
+<script src="bower_components/pointerevents-polyfill/pointerevents.min.js"></script>
 <script src="bower_components/requirejs/require.js"></script>
 <script>
 require.config({

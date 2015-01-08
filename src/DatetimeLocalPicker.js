@@ -199,35 +199,42 @@
         return undefined;
     }
 
+    function getDaysInMonth(moment_or_year, month) {
+        if (moment.isMoment(moment_or_year)) {
+            return moment_or_year.endOf('month').date(); // last day of given moment's month
+        }
+        // create ISO date from given year and month and determine last day of that date's month
+        return moment(''+(+moment_or_year)+'-'+(+month)+'-01', 'YYYY-MM-DD').endOf('month').date();
+    }
+
     // constructor function for DatetimeLocalPicker instances
     return function(instance_settings) {
         var settings = {};
-
         updateSettings(instance_settings || {});
 
         var $input_element = $(settings.inputElement);
+        var $output_element = $(settings.outputElement);
         var $container_element = settings.containerElement ? $(settings.containerElement) : null;
         var $trigger_element = $(settings.triggerElement);
 
-        console.log('hello from constructor');
-
         bindEventHandlers();
-
-        $trigger_element.on('click.' + settings.logPrefix, function(ev) {
-            draw();
-        });
 
         // return public api
         return {
-            getTriggerElement: function() {
-                return $trigger_element;
-            },
+
             getContainerElement: function() {
                 return $container_element;
             },
             getInputElement: function() {
                 return $input_element;
             },
+            getOutputElement: function() {
+                return $output_element;
+            },
+            getTriggerElement: function() {
+                return $trigger_element;
+            },
+
             getMinDate: function() {
                 return moment(settings.constraints.minDate);
             },
@@ -245,6 +252,32 @@
 
         function bindEventHandlers() {
             console.log('hello from bindEventHandlers');
+
+            var events = [
+                'pointerdown',
+                'pointerup',
+                //'pointermove',
+                //'pointerover',
+                //'pointerout',
+                //'pointerenter',
+                //'pointerleave',
+                'click'
+            ].join(' ');
+
+            var $output = $('#output');
+
+            $trigger_element.on(events, function(ev) {
+                console.log(ev.type);
+                $output.html($output.html() + ev.type + '<br>');
+            });
+
+            $trigger_element.on('click.' + settings.logPrefix, function(ev) {
+                draw();
+            });
+
+            $input_element.on(events, function(ev) {
+                console.log(ev.type);
+            });
         }
 
         function removeEventHandlers() {
@@ -262,6 +295,9 @@
 
             // use the input element as trigger element when no specific trigger was given
             settings.triggerElement = settings.triggerElement || settings.inputElement;
+
+            // use the input element as output element when no custom output element or format is needed/given
+            settings.outputElement = settings.outputElement || settings.inputElement;
 
             settings.isRTL = !!settings.isRTL;
 
