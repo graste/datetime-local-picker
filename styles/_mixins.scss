@@ -1,0 +1,36 @@
+@mixin calendar-table-layout {
+
+    .calendar__body {
+        display: table;
+    }
+
+    .weekdays {
+        display: table-header-group;
+
+        > div {
+            display: table-row;
+
+            > div {
+                display: table-cell;
+            }
+        }
+    }
+
+    .weeks {
+        display: table-row-group;
+    }
+
+    .week {
+        display: table-row;
+    }
+
+    .day {
+        display: table-cell;
+    }
+}
+
+@mixin calendar-list-layout {
+    div {
+        display: block;
+    }
+}

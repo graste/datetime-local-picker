@@ -1,0 +1,82 @@
+@import "mixins";
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    padding: 50px;
+    background-color: #333;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+.datepicker {
+    display: inline-block;
+    position: relative;
+
+    padding: 1em;
+    background-color: white;
+}
+
+.datepicker__pager {
+    position: absolute;
+    top: 1em;
+    left: 1em;
+    right: 1em;
+
+
+    a {
+        text-decoration: none;
+    }
+
+    .previous_year,
+    .previous_month {
+        float: left;
+        margin-right: 1em;
+    }
+
+    .next_year,
+    .next_month {
+        float: right;
+        margin-left: 1em;
+    }
+}
+
+.calendar {
+    display: inline-block;
+    background-color: white;
+    @include calendar-table-layout;
+
+    .calendar__header {
+        padding: 1em;
+        padding-top: 0;
+        text-align: center;
+    }
+
+    .day,
+    .weekday,
+    .calendar-week {
+        padding: 1em;
+        text-align: right;
+    }
+
+    .day:not(.day--excess):hover {
+        background-color: #ccc;
+    }
+
+    .weekday,
+    .calendar-week,
+    .day--excess {
+        color: #bbb;
+    }
+
+    /*
+    .day--excess {
+        color: transparent;
+    }
+    */
+
+    .weekend {
+        background-color: #eee;
+    }
+}
