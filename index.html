@@ -33,8 +33,10 @@ require(['src/DatetimeLocalPicker'], function(dtlp) {
         inputElement: '#datetimepicker',
         triggerElement: '#datetimepickerTrigger',
         containerElement: '#datetimepickerContainer',
-        minDate: new Date('2010-01-01'),
-        maxDate: new Date('2019-12-31'),
+        constraints: {
+            minDate: new Date('2010-01-01'),
+            maxDate: new Date('2019-12-31')
+        },
         yearRange: {
             before: 5,
             after: 5

@@ -15,7 +15,6 @@
         );
     }
 }(function ($, _, moment) {
-
     'use strict';
 
     var default_settings = {
@@ -50,13 +49,16 @@
         firstDayOfWeek: 0,
         numberOfMonths: 1,
 
-        minDate: null,
-        maxDate: null,
-        minYear: 0,
-        maxYear: 3000,
+        constraints: {
+            minDate: null,
+            maxDate: null,
+            minYear: 0,
+            maxYear: 3000,
+            minMonth: 0,
+            maxMonth: 11
+        },
+
         yearRange: [0, 10],
-        minMonth: 0,
-        maxMonth: 11,
 
         isRTL: false,
 
@@ -186,103 +188,142 @@
         even: 'more'
     };
 
-    function DatetimeLocalPicker(settings) {
-        var self = this;
-
-        self.configure(settings || {});
-
-        if (self.$triggerElement) {
-            self.$triggerElement.on(
-                'click.' + self.settings.logPrefix,
-                function(ev) {
-                    self.draw();
-                }
-            );
-        }
-    }
-
     function getRandomString() {
         return (Math.random().toString(36)+'00000000000000000').slice(2, 10);
     }
 
-    DatetimeLocalPicker.prototype = {
+    function cloneSpecialValues(value) {
+        if (moment.isMoment(value)) {
+            return moment(value);
+        }
+        return undefined;
+    }
 
-        parseDate: function(mixed) {
-            var new_date = moment(mixed).locale(this.settings.locale);
-            return new_date.isValid() ? new_date : false;
-        },
+    // constructor function for DatetimeLocalPicker instances
+    return function(instance_settings) {
+        var settings = {};
 
-        setMinMaxDate: function(min, max) {
-            this.settings.minDate = this.parseDate(min);
-            this.settings.maxDate = this.parseDate(max);
+        updateSettings(instance_settings || {});
 
-            if ((this.settings.minDate && this.settings.maxDate) && this.settings.maxDate.isBefore(this.settings.minDate)) {
-                var temp = this.settings.maxDate.clone();
-                this.settings.maxDate = this.settings.minDate.clone();
-                this.settings.minDate = temp;
+        var $input_element = $(settings.inputElement);
+        var $container_element = settings.containerElement ? $(settings.containerElement) : null;
+        var $trigger_element = $(settings.triggerElement);
+
+        console.log('hello from constructor');
+
+        bindEventHandlers();
+
+        $trigger_element.on('click.' + settings.logPrefix, function(ev) {
+            draw();
+        });
+
+        // return public api
+        return {
+            getTriggerElement: function() {
+                return $trigger_element;
+            },
+            getContainerElement: function() {
+                return $container_element;
+            },
+            getInputElement: function() {
+                return $input_element;
+            },
+            getMinDate: function() {
+                return moment(settings.constraints.minDate);
+            },
+            getMaxDate: function() {
+                return moment(settings.constraints.maxDate);
+            },
+            getSettings: function() {
+                return _.cloneDeep(settings, cloneSpecialValues);
             }
+        };
 
-            if (this.settings.minDate) {
-                this.settings.minYear = this.settings.minDate.year();
-                this.settings.minMonth = this.settings.minDate.month();
-            } else {
-                this.settings.minYear = default_settings.minYear;
-                this.settings.minMonth = default_settings.minMonth;
-            }
+        function draw() {
+            console.log('hello from draw', $trigger_element);
+        }
 
-            if (this.settings.maxDate) {
-                this.settings.maxYear = this.settings.maxDate.year();
-                this.settings.maxMonth = this.settings.maxDate.month();
-            } else {
-                this.settings.maxYear = default_settings.maxYear;
-                this.settings.maxMonth = default_settings.maxMonth;
-            }
+        function bindEventHandlers() {
+            console.log('hello from bindEventHandlers');
+        }
 
-            return this;
-        },
+        function removeEventHandlers() {
+            console.log('hello from removeEventHandlers');
+        }
 
-        configure: function(settings) {
-            if (!this.settings) {
-                this.settings = $.extend(true, {}, default_settings);
-            }
-
-            this.settings = $.extend(true, {}, default_settings, this.settings, settings);
+        function updateSettings(s) {
+            settings = $.extend(true, {}, default_settings, s, settings);
 
             // add (randomized) log prefix to instance
-            this.settings.logPrefix = this.settings.logPrefix || 'DatetimeLocalPicker';
-            if (!this.settings.randomizeLogPrefix || this.settings.randomizeLogPrefix === true || this.settings.logPrefix === '') {
-                this.settings.logPrefix += '#' + getRandomString();
+            settings.logPrefix = settings.logPrefix || 'DatetimeLocalPicker';
+            if (!settings.randomizeLogPrefix || settings.randomizeLogPrefix === true || settings.logPrefix === '') {
+                settings.logPrefix += '#' + getRandomString();
             }
 
-            this.settings.isRTL = !!this.settings.isRTL;
+            // use the input element as trigger element when no specific trigger was given
+            settings.triggerElement = settings.triggerElement || settings.inputElement;
+
+            settings.isRTL = !!settings.isRTL;
 
             // check for a valid given locale to use and store that in settings (as it might be invalid/unknown)
             var m = moment();
-            var locale = m.locale(this.settings.locale);
-            this.settings.locale = m.locale();
+            var locale = m.locale(settings.locale);
+            settings.locale = m.locale();
 
-            this.$inputElement = $(this.settings.inputElement);
-            this.$containerElement = this.settings.containerElement ? $(this.settings.containerElement) : null;
-
-            // use the input element as trigger element when no specific trigger was given
-            this.settings.triggerElement = this.settings.triggerElement || this.settings.inputElement;
-            this.$triggerElement = $(this.settings.triggerElement);
-
-
-            //if (!_.isArray(this.settings.inputFormats)) {
-            //    throw new Error('The inputFormats must be an array of dates or date strings.');
+            //if (!_.isArray(settings.inputFormats)) {
+            //    throw new Error('The inputFormats must be an array of acceptable date formats for moment.');
             //}
 
-            this.settings.disableWeekends = !!this.settings.disableWeekends;
+            settings.disableWeekends = !!settings.disableWeekends;
 
-            var nom = parseInt(this.settings.numberOfMonths, 10) || 1;
-            this.settings.numberOfMonths = nom > 12 ? 12 : nom;
+            settings.numberOfMonths = Math.abs(parseInt(settings.numberOfMonths, 10)) || 1;
 
-            this.setMinMaxDate(this.settings.minDate, this.settings.maxDate);
+            updateDateConstraints();
         }
 
-    };
+        function updateDateConstraints() {
+            var min_date = parseDate(settings.constraints.minDate);
+            var max_date = parseDate(settings.constraints.maxDate);
 
-    return DatetimeLocalPicker;
+            var min_year = default_settings.minYear;
+            var min_month = default_settings.minMonth;
+
+            var max_year = default_settings.maxYear;
+            var max_month = default_settings.maxMonth;
+
+            if ((min_date && max_date) && max_date.isBefore(min_date)) {
+                var temp = max_date.clone();
+                max_date = min_date.clone();
+                min_date = temp;
+            }
+
+            if (min_date) {
+                min_year = min_date.year();
+                min_month = min_date.month();
+            }
+
+            if (max_date) {
+                max_year = max_date.year();
+                max_month = max_date.month();
+            }
+
+            settings.constraints = {
+                minDate: min_date,
+                maxDate: max_date,
+
+                minYear: min_year,
+                maxYear: max_year,
+
+                minMonth: min_month,
+                maxMonth: max_month
+            };
+        }
+
+        function parseDate(mixed) {
+            var new_date = moment(mixed).locale(settings.locale);
+            return new_date.isValid() ? new_date : false;
+        }
+
+    }; // end of constructor function
 }));
 
