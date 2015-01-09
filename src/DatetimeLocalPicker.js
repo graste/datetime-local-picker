@@ -17,6 +17,8 @@
 }(function ($, _, moment) {
     'use strict';
 
+    var $output = $('#output');
+
     var default_settings = {
         inputElement: null,
         triggerElement: null,
@@ -25,17 +27,27 @@
 
         locale: 'en',
 
-        //inputFormats: null,
         inputFormats: [
             moment.ISO_8601,
-            "YYYY-MM-DD[T]HH:mm:ss.SSSZ",
+            'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
+            'YYYY-MM-DD[T]HH:mm:ss.SSS[Z]',
             "YYYY-MM-DD[T]HH:mm:ssZ",
+            "YYYY-MM-DD[T]HH:mm:ss[Z]",
             "YYYY-MM-DD",
-            "HH:mm:ss.SSS",
-            "HH:mm:ss"
+            "DD.MM.YYYY HH:mm:ss.SSSZ",
+            "DD.MM.YYYY HH:mm:ss.SSS",
+            "DD.MM.YYYY HH:mm:ss",
+            "DD.MM.YYYY HH:mm",
+            "DD.MM.YYYY",
+            "DD/MM/YYYY HH:mm:ss.SSSZ",
+            "DD/MM/YYYY HH:mm:ss.SSS",
+            "DD/MM/YYYY HH:mm:ss",
+            "DD/MM/YYYY HH:mm",
+            "DD/MM/YYYY"
         ],
-        displayFormat: moment.ISO_8601,
-        outputFormat: moment.ISO_8601,
+        // displayFormat: 'YYYY-MM-DD HH:mm:ss',
+        displayFormat: 'L LTS',
+        outputFormat: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
         parseStrict: false,
         //parseHuman: false,
 
@@ -113,6 +125,7 @@
         onDraw: null,
 
         templates: {
+            calendar: '',
             head: '',
             body: '',
             foot: '',
@@ -209,13 +222,26 @@
 
     // constructor function for DatetimeLocalPicker instances
     return function(instance_settings) {
+        var current_date;
         var settings = {};
         updateSettings(instance_settings || {});
 
-        var $input_element = $(settings.inputElement);
-        var $output_element = $(settings.outputElement);
         var $container_element = settings.containerElement ? $(settings.containerElement) : null;
         var $trigger_element = $(settings.triggerElement);
+        var $input_element = $(settings.inputElement);
+
+        var $hidden_element = $input_element.clone();
+        $hidden_element.attr('id', $hidden_element.attr('id') + settings.logPrefix);
+        $hidden_element.attr('type', 'search');
+        $hidden_element.insertBefore($input_element);
+
+        $input_element.removeAttr('name');
+
+        setCurrentDate(parseDate($input_element.val()));
+        console.log('utc', moment(current_date).utc().format());
+        console.log('local', moment(current_date).local().format());
+        current_date.local();
+        $input_element.val(moment(current_date).format(settings.displayFormat));
 
         bindEventHandlers();
 
@@ -228,8 +254,8 @@
             getInputElement: function() {
                 return $input_element;
             },
-            getOutputElement: function() {
-                return $output_element;
+            getHiddenElement: function() {
+                return $hidden_element;
             },
             getTriggerElement: function() {
                 return $trigger_element;
@@ -246,38 +272,55 @@
             }
         };
 
+        function parseDate(mixed) {
+            return moment(mixed, settings.inputFormats).locale(settings.locale);
+        }
+
         function draw() {
-            console.log('hello from draw', $trigger_element);
+            if ($container_element) {
+                $container_element.html(
+                    settings.templates.calendar({
+                        date: moment(current_date).format('MMMM YYYY')
+                    })
+                );
+            }
         }
 
         function bindEventHandlers() {
-            console.log('hello from bindEventHandlers');
-
+            /*
             var events = [
                 'pointerdown',
                 'pointerup',
-                //'pointermove',
-                //'pointerover',
-                //'pointerout',
-                //'pointerenter',
-                //'pointerleave',
+                'pointermove',
+                'pointerover',
+                'pointerout',
+                'pointerenter',
+                'pointerleave',
                 'click'
             ].join(' ');
-
-            var $output = $('#output');
-
-            $trigger_element.on(events, function(ev) {
-                console.log(ev.type);
-                $output.html($output.html() + ev.type + '<br>');
-            });
+            */
 
             $trigger_element.on('click.' + settings.logPrefix, function(ev) {
                 draw();
             });
 
-            $input_element.on(events, function(ev) {
-                console.log(ev.type);
+            $hidden_element.on('change.' + settings.logPrefix, function(ev) {
+                console.log($hidden_element.val());
             });
+            $input_element.on('change.' + settings.logPrefix, handleInputElementChange);
+            //$input_element.on('keyup.' + settings.logPrefix, handleInputElementChange);
+        }
+
+        function handleInputElementChange(ev) {
+            setCurrentDate(parseDate($input_element.val()));
+        }
+
+        function setCurrentDate(date) {
+            if (moment.isMoment(date) && date.isValid()) {
+                current_date = moment(date);
+                $hidden_element.val(moment(current_date).utc().format(settings.outputFormat));
+                draw();
+            }
         }
 
         function removeEventHandlers() {
@@ -296,25 +339,22 @@
             // use the input element as trigger element when no specific trigger was given
             settings.triggerElement = settings.triggerElement || settings.inputElement;
 
-            // use the input element as output element when no custom output element or format is needed/given
-            settings.outputElement = settings.outputElement || settings.inputElement;
-
-            settings.isRTL = !!settings.isRTL;
-
             // check for a valid given locale to use and store that in settings (as it might be invalid/unknown)
             var m = moment();
             var locale = m.locale(settings.locale);
             settings.locale = m.locale();
 
-            //if (!_.isArray(settings.inputFormats)) {
-            //    throw new Error('The inputFormats must be an array of acceptable date formats for moment.');
-            //}
+            if (!_.isArray(settings.inputFormats)) {
+                throw new Error('The inputFormats must be an array of acceptable date formats for moment.');
+            }
+            settings.inputFormats.push(settings.displayFormat);
 
             settings.disableWeekends = !!settings.disableWeekends;
-
+            settings.isRTL = !!settings.isRTL;
             settings.numberOfMonths = Math.abs(parseInt(settings.numberOfMonths, 10)) || 1;
 
             updateDateConstraints();
+            compileTemplates();
         }
 
         function updateDateConstraints() {
@@ -327,18 +367,18 @@
             var max_year = default_settings.maxYear;
             var max_month = default_settings.maxMonth;
 
-            if ((min_date && max_date) && max_date.isBefore(min_date)) {
+            if ((min_date.isValid() && max_date.isValid()) && max_date.isBefore(min_date)) {
                 var temp = max_date.clone();
                 max_date = min_date.clone();
                 min_date = temp;
             }
 
-            if (min_date) {
+            if (min_date.isValid()) {
                 min_year = min_date.year();
                 min_month = min_date.month();
             }
 
-            if (max_date) {
+            if (max_date.isValid()) {
                 max_year = max_date.year();
                 max_month = max_date.month();
             }
@@ -355,9 +395,16 @@
             };
         }
 
-        function parseDate(mixed) {
-            var new_date = moment(mixed).locale(settings.locale);
-            return new_date.isValid() ? new_date : false;
+        function compileTemplates() {
+            if (!_.isPlainObject(settings.templates)) {
+                throw new Error('Settings must have a "templates" object with lodash templates (compiled or not).');
+            }
+
+            _.forIn(settings.templates, function(value, key, templates) {
+                if (!_.isFunction(templates[key]) && _.isString(value)) {
+                    templates[key] = _.template(value); // compile template string
+                }
+            });
         }
 
     }; // end of constructor function

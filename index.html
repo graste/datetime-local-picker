@@ -1,19 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>datetime-local-picker</title>
+    <link rel="stylesheet" type="text/css" href="styles/main.css" />
+<style>
+body, label {
+    color: white;
+}
+input {
+    width: 20em;
+}
+.dtp {
+    color: black;
+}
+</style>
 </head>
 <body>
 
 <h1>datetime-local-picker</h1>
 
 <div class="dtp" touch-action="none">
-    <label for="datetimepicker" class="dtp__label">Datetime:</label>
-    <input type="text" id="datetimepicker" class="dtp__input">
-    <button class="dtp__trigger" id="datetimepickerTrigger">trigger</button>
-    <div class="dtp__container" id="datetimepickerContainer">
+    <label for="publishDate" class="dtp__label">Publish date:</label>
+    <input type="text"
+        name="publishDate"
+        value="2015-01-15T12:42:23.789+00:00"
+        data-value-formatted="Donnerstag, 15. Januar 2015 12:42:23.789"
+        class="dtp__output"
+        id="publishDate"
+    >
+    <button class="dtp__trigger" id="publishDateTrigger">trigger</button>
+    <div class="dtp__container" id="publishDatePickerContainer">
     </div>
 </div>
 <div id="output"></div>
@@ -21,23 +39,61 @@
 <script src="bower_components/pointerevents-polyfill/pointerevents.min.js"></script>
 <script src="bower_components/requirejs/require.js"></script>
 <script>
+
+require.onError = function(error) {
+    if (error.requireType === 'scripterror' && (window.console && console.error)) {
+        console.error(
+            'There is a javascript syntax error or other execution problem for module: ',
+            error.requireModules,
+            'See: http://requirejs.org/docs/errors.html#scripterror'
+        );
+    } else if (error.requireType === 'timeout' && (window.console && console.error)) {
+        console.error(
+            'A timeout occurred on loading the modules: ',
+            error.requireModules,
+            'Please check 404s, verify the path config or increase the "waitSeconds" config option.',
+            'See: http://requirejs.org/docs/errors.html#timeout'
+        );
+    } else {
+        throw error;
+    }
+};
+
 require.config({
     baseUrl: './',
+    urlArgs: "cb=" + (+new Date()),
+    enforceDefine: true,
     paths: {
         'jquery': 'bower_components/jquery/dist/jquery.min',
         'lodash': 'bower_components/lodash/dist/lodash.min',
-        'moment': 'bower_components/moment/min/moment-with-locales.min'
+        'moment': 'bower_components/moment/min/moment-with-locales.min',
+        'ldsh':   'bower_components/lodash-template-loader/loader'
     },
-    enforceDefine: true
+    lodashLoader: {
+        ext: ".html",
+        root: "/src/",
+        templateSettings: {}
+    }
 });
-require(['src/DatetimeLocalPicker'], function(dtlp) {
+
+require([
+    'src/DatetimeLocalPicker',
+    'ldsh!calendar.tmpl'
+], function(dtlp, calendar_tmpl) {
     var picker = new dtlp({
-        inputElement: '#datetimepicker',
-        triggerElement: '#datetimepickerTrigger',
-        containerElement: '#datetimepickerContainer',
+        inputElement: '#publishDate',
+        triggerElement: '#publishDateTrigger',
+        containerElement: '#publishDatePickerContainer',
+        //outputFormat: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
+        //displayFormat: 'dddd, Do MMMM YYYY HH:mm:ss.SSS',
+        locale: $('html').attr('lang'),
         constraints: {
             minDate: new Date('2010-01-01'),
             maxDate: new Date('2019-12-31')
+        },
+        templates: {
+            calendar: calendar_tmpl,
+            test: '<%- omg %>'
         },
         yearRange: {
             before: 5,
@@ -47,6 +103,7 @@ require(['src/DatetimeLocalPicker'], function(dtlp) {
     });
     foo = picker;
 });
+
 </script>
 
 </body>
