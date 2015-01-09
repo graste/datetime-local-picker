@@ -68,13 +68,7 @@ require([
         inputElement: '#publishDate',
         triggerElement: '#publishDateTrigger',
         containerElement: '#publishDatePickerContainer',
-        //outputFormat: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
-        //displayFormat: 'dddd, Do MMMM YYYY HH:mm:ss.SSS',
         locale: $('html').attr('lang'),
-/*        firstDayOfWeek: 3,
-        weekendDays: [4, 5, 6],
-        notationWeekdays: '_weekdaysMin',*/
-        parseStrict: true,
         constraints: {
             minDate: new Date('2010-01-01'),
             maxDate: new Date('2019-12-31')
@@ -82,12 +76,7 @@ require([
         templates: {
             calendar: calendar_tmpl,
             test: '<%- omg %>'
-        },
-        yearRange: {
-            before: 5,
-            after: 5
-        },
-        showTime: true
+        }
     });
     foo = picker;
 });

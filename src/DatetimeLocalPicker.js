@@ -149,6 +149,11 @@
 
         cssPrefix: 'dtlp-',
         cssClasses: {
+            weekday: 'weekday',
+            weekend: 'weekend',
+
+
+
             container: 'wrapper',
 
             head: 'head',
@@ -247,7 +252,6 @@
         $hidden_element.attr('id', $hidden_element.attr('id') + settings.logPrefix);
         $hidden_element.attr('type', 'search');
         $hidden_element.insertBefore($input_element);
-
         $input_element.removeAttr('name');
 
         bindEventHandlers();
@@ -383,7 +387,9 @@
             $container_element.html(
                 settings.templates.calendar({
                     header: moment(current_date).local().format('MMMM YYYY'),
-                    weekdays: prepareWeekdays()
+                    footer: '',
+                    weekdays: prepareWeekdays(),
+                    weeks: prepareWeeks()
                 })
             );
         }
@@ -394,15 +400,15 @@
             var locale_data = m.localeData();
             var idx = 0;
             for (idx = 0; idx < 7; idx++) {
-                // determine actual index (day number) to lookup in weekdaysShort
+                // determine actual index (day number) to lookup in local_data
                 var day = idx + settings.firstDayOfWeek;
                 while (day >= 7) {
-                     day -= 7;
+                    day -= 7;
                 }
 
-                var css_classes = 'weekday';
+                var css_classes = settings.cssClasses.weekday;
                 if (settings.weekendDays.indexOf(idx) !== -1) {
-                    css_classes += ' weekend ';
+                    css_classes += ' ' + settings.cssClasses.weekend;
                 }
 
                 weekdays[idx] = {
@@ -412,6 +418,41 @@
             }
 
             return weekdays;
+        }
+
+        function prepareWeeks() {
+            var weeks = [];
+            var idx = 0;
+            var date = moment(current_date);
+            var today = moment();
+            var days_in_month = getDaysInMonth(date);
+            var first_day_of_month = moment(date).startOf('month');
+            var last_day_of_month = moment(date).endOf('month');
+
+            var days_before = first_day_of_month.weekday(); // idx of first weekday
+            var days_after = 42 - (days_before + days_in_month); // 42 = 6 weeks a 7 days
+            var cells = days_before + days_in_month + days_after; // should always be 42
+
+            console.log('before='+days_before, 'dim='+days_in_month, 'after='+days_after, ' => cells='+cells);
+
+            var dnum = 0;
+            var wnum = 0;
+            var cnt = 0;
+            for (idx = 0; idx < 6; idx++) {
+                weeks[idx] = {
+                    css: 'week',
+                    content: idx+1,
+                    days: []
+                };
+                for (var diw = 0; diw <= 7; diw++) {
+                    weeks[idx].days[diw] = {
+                        css: 'day',
+                        content: diw===0 ? idx+1 : diw
+                    };
+                }
+            }
+
+            return weeks;
         }
 
         function removeEventHandlers() {

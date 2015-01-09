@@ -8,56 +8,13 @@
             </div>
         </div>
         <div class="weeks">
-            <div class="week">
-                <div class="calendar-week">1</div>
-                <div class="day day--excess">29</div>
-                <div class="day day--excess">30</div>
-                <div class="day day--excess">31</div>
-                <div class="day">01</div>
-                <div class="day">02</div>
-                <div class="day weekend">03</div>
-                <div class="day weekend">04</div>
+            <% _.forEach(weeks, function(week) { %>
+            <div class="<%- week.css %>">
+                <% _.forEach(week.days, function(day) { %>
+                <div class="<%- day.css %>"><%- day.content %></div>
+                <% }); %>
             </div>
-            <div class="week">
-                <div class="calendar-week">2</div>
-                <div class="day">05</div>
-                <div class="day">06</div>
-                <div class="day">07</div>
-                <div class="day">08</div>
-                <div class="day">09</div>
-                <div class="day weekend">10</div>
-                <div class="day weekend">11</div>
-            </div>
-            <div class="week">
-                <div class="calendar-week">3</div>
-                <div class="day">12</div>
-                <div class="day">13</div>
-                <div class="day">14</div>
-                <div class="day">15</div>
-                <div class="day">16</div>
-                <div class="day weekend">17</div>
-                <div class="day weekend">18</div>
-            </div>
-            <div class="week">
-                <div class="calendar-week">4</div>
-                <div class="day">19</div>
-                <div class="day">21</div>
-                <div class="day">22</div>
-                <div class="day">23</div>
-                <div class="day">24</div>
-                <div class="day weekend">25</div>
-                <div class="day weekend">26</div>
-            </div>
-            <div class="week">
-                <div class="calendar-week">5</div>
-                <div class="day">27</div>
-                <div class="day">28</div>
-                <div class="day">29</div>
-                <div class="day">30</div>
-                <div class="day">31</div>
-                <div class="day weekend day--excess">01</div>
-                <div class="day weekend day--excess">02</div>
-            </div>
+            <% }); %>
         </div>
     </div>
 </div>
