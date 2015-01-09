@@ -1,10 +1,10 @@
 <div class="calendar">
-    <div class="calendar__header"><%- date %></div>
+    <div class="calendar__header"><%- header %></div>
     <div class="calendar__body">
         <div class="weekdays">
             <div>
                 <div class="is-empty"><!-- --></div>
-                <%_.forEach(weekdays, function(weekday) { %><div class="<%- weekday.css %>"><%- weekday.content %></div><% }); %>
+                <% _.forEach(weekdays, function(weekday) { %><div class="<%- weekday.css %>"><%- weekday.content %></div><% }); %>
             </div>
         </div>
         <div class="weeks">

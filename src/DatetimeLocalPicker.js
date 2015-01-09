@@ -234,9 +234,14 @@
         var settings = {};
         updateSettings(instance_settings || {});
 
-        var $container_element = settings.containerElement ? $(settings.containerElement) : null;
         var $trigger_element = $(settings.triggerElement);
         var $input_element = $(settings.inputElement);
+
+        var $container_element = settings.containerElement ? $(settings.containerElement) : null;
+        if (_.isNull($container_element)) {
+            $container_element = $('<div>').attr('id', 'container'+settings.logPrefix);
+            $container_element.insertAfter($input_element);
+        }
 
         var $hidden_element = $input_element.clone();
         $hidden_element.attr('id', $hidden_element.attr('id') + settings.logPrefix);
@@ -339,6 +344,7 @@
 
         function setCurrentDate(date) {
             if (moment.isMoment(date) && date.isValid()) {
+                current_date = moment(date).local();
                 setHiddenElementDate(date);
                 setInputElementDate(date);
             } else {
@@ -374,14 +380,12 @@
         }
 
         function draw() {
-            if ($container_element) {
-                $container_element.html(
-                    settings.templates.calendar({
-                        date: moment(current_date).format('MMMM YYYY'),
-                        weekdays: prepareWeekdays()
-                    })
-                );
-            }
+            $container_element.html(
+                settings.templates.calendar({
+                    header: moment(current_date).local().format('MMMM YYYY'),
+                    weekdays: prepareWeekdays()
+                })
+            );
         }
 
         function prepareWeekdays() {
