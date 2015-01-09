@@ -12,6 +12,9 @@ body, label {
 input {
     width: 20em;
 }
+.is-invalid {
+    outline: 2px solid red;
+}
 .dtp {
     color: black;
 }
@@ -39,25 +42,6 @@ input {
 <script src="bower_components/pointerevents-polyfill/pointerevents.min.js"></script>
 <script src="bower_components/requirejs/require.js"></script>
 <script>
-
-require.onError = function(error) {
-    if (error.requireType === 'scripterror' && (window.console && console.error)) {
-        console.error(
-            'There is a javascript syntax error or other execution problem for module: ',
-            error.requireModules,
-            'See: http://requirejs.org/docs/errors.html#scripterror'
-        );
-    } else if (error.requireType === 'timeout' && (window.console && console.error)) {
-        console.error(
-            'A timeout occurred on loading the modules: ',
-            error.requireModules,
-            'Please check 404s, verify the path config or increase the "waitSeconds" config option.',
-            'See: http://requirejs.org/docs/errors.html#timeout'
-        );
-    } else {
-        throw error;
-    }
-};
 
 require.config({
     baseUrl: './',
@@ -87,6 +71,10 @@ require([
         //outputFormat: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
         //displayFormat: 'dddd, Do MMMM YYYY HH:mm:ss.SSS',
         locale: $('html').attr('lang'),
+/*        firstDayOfWeek: 3,
+        weekendDays: [4, 5, 6],
+        notationWeekdays: '_weekdaysMin',*/
+        parseStrict: true,
         constraints: {
             minDate: new Date('2010-01-01'),
             maxDate: new Date('2019-12-31')

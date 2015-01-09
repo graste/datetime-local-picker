@@ -3,14 +3,8 @@
     <div class="calendar__body">
         <div class="weekdays">
             <div>
-                <div><!-- --></div>
-                <div class="weekday">Mon</div>
-                <div class="weekday">Tue</div>
-                <div class="weekday">Wed</div>
-                <div class="weekday">Thu</div>
-                <div class="weekday">Fri</div>
-                <div class="weekday weekend">Sat</div>
-                <div class="weekday weekend">Sun</div>
+                <div class="is-empty"><!-- --></div>
+                <%_.forEach(weekdays, function(weekday) { %><div class="<%- weekday.css %>"><%- weekday.content %></div><% }); %>
             </div>
         </div>
         <div class="weeks">
