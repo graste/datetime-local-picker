@@ -8,14 +8,23 @@ body {
     padding: 50px;
     background-color: #333;
     font-family: Helvetica, Arial, sans-serif;
+
+    @media screen and (max-width:767px) {
+        padding: 0;
+        margin: 0;
+    }
 }
 
 .datepicker {
-    display: inline-block;
     position: relative;
 
-    padding: 1em;
     background-color: white;
+
+
+    @media screen and (min-width: 768px) {
+        display: inline-block;
+        padding: 1em;
+    }
 }
 
 .datepicker__pager {
@@ -43,9 +52,7 @@ body {
 }
 
 .calendar {
-    display: inline-block;
     background-color: white;
-    @include calendar-table-layout;
 
     .calendar__header {
         padding: 1em;
@@ -70,13 +77,46 @@ body {
         color: #bbb;
     }
 
-    /*
-    .day--excess {
-        color: transparent;
-    }
-    */
-
     .weekend {
         background-color: #eee;
     }
+
+
+
+    @media screen and (max-width: 767px) {
+        @include calendar-list-layout;
+
+        .calendar__header {
+            padding-top: 1em;
+        }
+
+        .weekday,
+        .day--excess {
+            display: none;
+        }
+
+        .calendar-week {
+            text-align: left;
+            color: inherit;
+
+            border-bottom: 3px solid #ccc;
+
+            &::before {
+                content: "Week ";
+            }
+        }
+
+        .day::before {
+            content: attr(data-day-name);
+            float: left;
+            color: #bbb;
+        }
+    }
+
+    @media screen and (min-width: 768px) {
+        display: inline-block;
+        @include calendar-table-layout;
+
+    }
+
 }
