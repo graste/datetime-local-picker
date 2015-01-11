@@ -1,20 +1,26 @@
 <div class="calendar">
-    <div class="calendar__header"><%- header %></div>
+    <div class="calendar__header">
+        <span class="calendar-title"><%- calendarHeader.content %></span>
+    </div>
     <div class="calendar__body">
         <div class="weekdays">
             <div>
-                <div class="is-empty"><!-- --></div>
-                <% _.forEach(weekdays, function(weekday) { %><div class="<%- weekday.css %>"><%- weekday.content %></div><% }); %>
+                <div class="calendar-week is-empty"><!-- --></div>
+                <% _.forEach(calendarWeekdays, function(weekday) { %>
+                <div class="<%- weekday.css %>"><%- weekday.content %></div>
+                <% }); %>
             </div>
         </div>
         <div class="weeks">
-            <% _.forEach(weeks, function(week) { %>
+            <% _.forEach(calendarWeeks, function(week) { %>
             <div class="<%- week.css %>">
+                <div class="<%- week.weekNumberCSS %>"><%- week.content %></div>
                 <% _.forEach(week.days, function(day) { %>
-                <div class="<%- day.css %>"><%- day.content %></div>
+                <div class="<%- day.css %>"><%- day.date.date() %></div>
                 <% }); %>
             </div>
             <% }); %>
         </div>
     </div>
 </div>
+

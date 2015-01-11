@@ -25,11 +25,22 @@
 
         locale: 'en',
         parseStrict: true,
-        //parseHuman: false,
-        firstDayOfWeek: null,
-        weekendDays: [5, 6],
-        notationWeekdays: '_weekdaysMin',
-        numberOfMonths: 1,
+
+        // must be given per locale as moment doesn't include this
+        // see https://github.com/moment/moment/issues/1947
+        // see https://en.wikipedia.org/wiki/Workweek_and_weekend
+        weekendDays: [6, 0], // based on 0 to 6 (Sunday to Saturday)
+        notationWeekdays: '_weekdaysMin', // moment.localeData()[…]
+
+        // positive integer of weeks to render for a calendar month;
+        // anything lower than necessary number of weeks will be ignored
+        minWeeksPerMonth: 0,
+
+        // number of months to display at once
+        numberOfMonths: {
+            before: 0,
+            after: 0
+        },
 
         inputFormats: [
             moment.ISO_8601,
@@ -137,11 +148,9 @@
 
         templates: {
             calendar: '',
-            head: '',
-            body: '',
-            foot: '',
-            row: '',
-            day: '',
+            foo: '<pre><%= JSON.stringify(settings) %></pre>'
+            //calendarHeader: '<span class="calendar-title"><%- date.format("MMMM YYYY") %></span>',
+            //calendarWeekdays: '…',
         },
 
         htmlAttributes: {
@@ -149,8 +158,13 @@
 
         cssPrefix: 'dtlp-',
         cssClasses: {
-            weekday: 'weekday',
+            dayName: 'weekday',
             weekend: 'weekend',
+            week: 'week',
+            weekNumber: 'calendar-week',
+            day: 'day',
+            dayPrevMonth: 'day--excess day--prevMonth',
+            dayNextMonth: 'day--excess day--nextMonth',
 
 
 
@@ -167,9 +181,6 @@
             multipleMonths: 'multiple-months',
             singleMonth: 'single-month',
 
-            day: 'day',
-            dayName: 'dayname',
-            week: 'week',
             month: 'month',
             year: 'year',
 
@@ -266,12 +277,12 @@
             current_date.locale(settings.locale);
         }
 
+        if (settings.debug) {
+            console.log('settings', settings);
+        }
+
         // return public api
         return {
-
-            getContainerElement: function() {
-                return $container_element;
-            },
             getInputElement: function() {
                 return $input_element;
             },
@@ -281,7 +292,9 @@
             getTriggerElement: function() {
                 return $trigger_element;
             },
-
+            getContainerElement: function() {
+                return $container_element;
+            },
             getMinDate: function() {
                 return moment(settings.constraints.minDate);
             },
@@ -293,6 +306,9 @@
             },
             getCurrentDate: function() {
                 return moment(current_date);
+            },
+            isWeekend: function(valid_moment) {
+                return isWeekend(valid_moment);
             }
         };
 
@@ -358,6 +374,11 @@
             draw();
         }
 
+        function isWeekend(valid_moment) {
+            var m = moment(valid_moment).locale(settings.locale);
+            return (settings.weekendDays.indexOf(m.day()) !== -1);
+        }
+
         function setHiddenElementDate(valid_moment) {
             $hidden_element.val(
                 //moment(valid_moment).utc().format(settings.outputFormat)
@@ -378,81 +399,209 @@
                 $input_element.val(
                     m.local().format(settings.displayFormat)
                 );
+                $input_element.removeClass('is-invalid');
             } else {
+                $input_element.addClass('is-invalid');
                 throw new Error('Hidden input element contains an invalid moment: ' + m);
             }
         }
 
         function draw() {
-            $container_element.html(
-                settings.templates.calendar({
-                    header: moment(current_date).local().format('MMMM YYYY'),
-                    footer: '',
-                    weekdays: prepareWeekdays(),
-                    weeks: prepareWeeks()
-                })
-            );
+            var html = '';
+            var idx;
+
+            // render N previous months
+            for (idx = settings.numberOfMonths.before; idx > 0; idx--) {
+                html += renderCalendarMonth(
+                    moment(current_date).subtract(idx, 'months')
+                );
+            }
+
+            // render current month
+            html += renderCalendarMonth(moment(current_date));
+
+            // render N next months
+            for (idx = 1; idx <= settings.numberOfMonths.after; idx++) {
+                html += renderCalendarMonth(
+                    moment(current_date).add(idx, 'months')
+                );
+            }
+
+            $container_element.html(html);
         }
 
-        function prepareWeekdays() {
+        function renderCalendarMonth(date) {
+            date = moment(date); // clone just in case someone modifies the date while rendering
+            return settings.templates.calendar({
+                calendarHeader: prepareCalendarHeader(date),
+                calendarFooter: '',
+                calendarWeekdays: prepareCalendarWeekdays(date),
+                calendarWeeks: prepareCalendarWeeks(date),
+                localeData: date.localeData(),
+                settings: settings,
+                currentDate: date
+            });
+        }
+
+        function prepareCalendarHeader(date) {
+            var data = {
+                date: moment(date),
+                year: date.format('YYYY'),
+                month: date.format('MMMM'),
+                content: date.format('MMMM YYYY')
+            };
+
+            // optionally use a compiled template for the content property
+            if (settings.templates.calendarHeader && _.isFunction(settings.templates.calendarHeader)) {
+                data.content = settings.templates.calendarHeader(data);
+            }
+
+            return data;
+        }
+
+        function prepareCalendarWeekdays(date) {
             var weekdays = [];
-            var m = moment(current_date);
-            var locale_data = m.localeData();
-            var idx = 0;
-            for (idx = 0; idx < 7; idx++) {
-                // determine actual index (day number) to lookup in local_data
-                var day = idx + settings.firstDayOfWeek;
-                while (day >= 7) {
+            var locale_data = date.localeData();
+            var weekday_data = {};
+            var fdow = locale_data.firstDayOfWeek();
+            for (var idx = fdow, len = fdow + 7; idx < len; idx++) {
+                // determine actual index to lookup in local_data as that is 0-6 based
+                var day = idx;
+                if (day >= 7) {
                     day -= 7;
                 }
 
-                var css_classes = settings.cssClasses.weekday;
-                if (settings.weekendDays.indexOf(idx) !== -1) {
+                var css_classes = settings.cssClasses.dayName;
+                if (settings.weekendDays.indexOf(day) !== -1) {
                     css_classes += ' ' + settings.cssClasses.weekend;
                 }
 
-                weekdays[idx] = {
+                weekday_data = {
                     content: locale_data[settings.notationWeekdays][day],
-                    css: css_classes
+                    fullName: locale_data._weekdays[day],
+                    shortName: locale_data._weekdaysShort[day],
+                    minName: locale_data._weekdaysMin[day],
+                    css: css_classes,
+                    localeData: locale_data
                 };
+
+                // optionally use a compiled template for the content property
+                if (settings.templates.calendarWeekdays && _.isFunction(settings.templates.calendarWeekdays)) {
+                    weekday_data.content = settings.templates.calendarWeekdays(weekday_data);
+                }
+
+                weekdays.push(weekday_data);
             }
 
             return weekdays;
         }
 
-        function prepareWeeks() {
+        function prepareCalendarWeeks(date) {
             var weeks = [];
-            var idx = 0;
-            var date = moment(current_date);
+            var days_per_week = 7;
             var today = moment();
+            var current_date = moment(date);
             var days_in_month = getDaysInMonth(date);
-            var first_day_of_month = moment(date).startOf('month');
-            var last_day_of_month = moment(date).endOf('month');
+            var first_date_of_month = moment(date).startOf('month');
+            var first_week_of_month = first_date_of_month.week();
+            var last_date_of_month = moment(date).endOf('month');
+            var last_week_of_month = last_date_of_month.week();
 
-            var days_before = first_day_of_month.weekday(); // idx of first weekday
-            var days_after = 42 - (days_before + days_in_month); // 42 = 6 weeks a 7 days
-            var cells = days_before + days_in_month + days_after; // should always be 42
+            var num_weeks = Math.ceil(Math.abs(last_date_of_month.diff(first_date_of_month, 'weeks', true)));
+            if (settings.minWeeksPerMonth > num_weeks) {
+                num_weeks = settings.minWeeksPerMonth;
+            }
 
-            console.log('before='+days_before, 'dim='+days_in_month, 'after='+days_after, ' => cells='+cells);
+            var days_before = first_date_of_month.weekday(); // idx of first day of week
+            var days_after = (num_weeks * days_per_week) - (days_before + days_in_month);
+            if (days_after < 0) {
+                days_after += days_per_week;
+            }
 
-            var dnum = 0;
-            var wnum = 0;
-            var cnt = 0;
-            for (idx = 0; idx < 6; idx++) {
-                weeks[idx] = {
-                    css: 'week',
-                    content: idx+1,
-                    days: []
-                };
-                for (var diw = 0; diw <= 7; diw++) {
-                    weeks[idx].days[diw] = {
-                        css: 'day',
-                        content: diw===0 ? idx+1 : diw
+            var num_days = days_before + days_in_month + days_after;
+            var num_cells = num_days + num_weeks; // week numbers before each week
+
+            if (settings.debug) {
+                console.log('num_weeks='+num_weeks);
+                console.log('first_week='+first_week_of_month, 'last_week='+last_week_of_month);
+                console.log('days_before='+days_before, 'dim='+days_in_month, 'days_after='+days_after);
+                console.log('days_to_render='+num_days, 'cells_to_render='+num_cells);
+            }
+
+            var start_date = moment(first_date_of_month).subtract(+days_before, 'days');
+            var end_date = moment(last_date_of_month).add(days_after, 'days');
+            if (settings.debug) {
+                console.log('start=', start_date.toString());
+                console.log('  end=', end_date.toString());
+            }
+
+            var day_css;
+            var day_content;
+            var day_data = {};
+            var week_data = {};
+            var render_date = moment(start_date);
+            var idx;
+
+            for (idx = 0; idx < num_days; idx++) {
+
+                // initialize a new week's data
+                if (idx%(days_per_week) === 0) {
+                    week_data = {
+                        css: settings.cssClasses.week,
+                        weekNumberCSS: settings.cssClasses.weekNumber,
+                        num: render_date.week(),
+                        content: render_date.week(),
+                        days: []
                     };
                 }
+
+                // css for one calendar day
+                day_css = settings.cssClasses.day;
+                if (isWeekend(render_date)) {
+                    day_css += ' ' + settings.cssClasses.weekend;
+                }
+                if (idx < days_before) {
+                    day_css += ' ' + settings.cssClasses.dayPrevMonth;
+                } else if (idx >= (days_before + days_in_month)) {
+                    day_css += ' ' + settings.cssClasses.dayNextMonth;
+                }
+
+                day_content = render_date.date();
+                if (isDisabled(render_date)) {
+                    day_content = settings.template.disabledDay({
+                        date: render_date,
+                        settings: settings
+                    });
+                }
+
+                // data for one calendar day
+                day_data = {
+                    css: day_css,
+                    date: moment(render_date),
+                    content: day_content
+                };
+
+                // add day_data to current week's data
+                week_data.days.push(day_data);
+
+                // add whole week's data to weeks array
+                if (week_data.days.length === days_per_week) {
+                    weeks.push(week_data);
+                }
+
+                // advance one day
+                render_date.add(1, 'day');
+            }
+
+            if (settings.debug) {
+                console.log('weeks_data=', weeks);
             }
 
             return weeks;
+        }
+
+        function isDisabled(date) {
+            return false;
         }
 
         function removeEventHandlers() {
@@ -477,8 +626,6 @@
             settings.locale = m.locale(); // actual locale being used
 
             var fdow = settings.firstDayOfWeek;
-            if (!_.isNull(fdow)) {
-            }
             if (!_.isNull(fdow) && ((+fdow >= 0) && (+fdow <= 6))) {
                 settings.firstDayOfWeek = fdow;
             } else {
@@ -487,23 +634,52 @@
             }
 
             if (!(_.isArray(settings.weekendDays) && _.min(settings.weekendDays) >= 0 && _.max(settings.weekendDays) <= 6)) {
-                throw new Error('The weekendDays must be an array of integers that represent the index of weekdays to use as weekend (defaults to [5, 6]).');
+                throw new Error('Setting weekendDays must be an array of positive integers that represent the index of weekdays to use as weekend (defaults to [0, 6] which is Sun/Sat).');
             }
 
             var valid_weekdays_notations = ['_weekdays', '_weekdaysShort', '_weekdaysMin'];
             if (!_.isString(settings.notationWeekdays) || (_.isString(settings.notationWeekdays) && valid_weekdays_notations.indexOf(settings.notationWeekdays) === -1)) {
-                throw new Error('The notationWeekdays must be one of: ' + valid_weekdays_notations.join(', '));
+                throw new Error('Setting notationWeekdays must be one of: ' + valid_weekdays_notations.join(', '));
             }
             settings.notationWeekdays = settings.notationWeekdays || '_weekdaysMin';
 
+            settings.minWeeksPerMonth = Math.ceil(+settings.minWeeksPerMonth);
+            if (_.isNaN(settings.minWeeksPerMonth) || (!_.isNaN(settings.minWeeksPerMonth) && (settings.minWeeksPerMonth < 0))) {
+                throw new Error('Setting minWeeksPerMonth must be a positive integer value of minimum number of weeks to display.');
+            }
+
             if (!_.isArray(settings.inputFormats)) {
-                throw new Error('The inputFormats must be an array of acceptable date formats for moment.');
+                throw new Error('Setting inputFormats must be an array of acceptable date format strings for moment.');
             }
             settings.inputFormats.push(settings.displayFormat);
 
             settings.disableWeekends = !!settings.disableWeekends;
             settings.isRTL = !!settings.isRTL;
-            settings.numberOfMonths = Math.abs(parseInt(settings.numberOfMonths, 10)) || 1;
+
+            var nom = settings.numberOfMonths;
+            if (_.isNumber(nom) && !_.isNaN(nom)) {
+                nom = Math.ceil(Math.abs(nom));
+                if (nom > 1) {
+                    settings.numberOfMonths = {
+                        before: 0,
+                        after: nom-1
+                    };
+                }
+            } else if (_.isObject(nom) &&
+                _.has(nom, 'before') && _.has(nom, 'after') &&
+                _.isNumber(nom.before) && _.isNumber(nom.after) &&
+                !_.isNaN(nom.before) && !_.isNaN(nom.after)
+            ) {
+                settings.numberOfMonths = {
+                    before: Math.ceil(Math.abs(nom.before)),
+                    after: Math.ceil(Math.abs(nom.after))
+                };
+            } else {
+                throw new Error('Setting numberOfMonths must be a positive integer or an object with before/after properties with a positive number of months to display before or after the current calendar month.');
+            }
+
+
+            settings.debug = !!settings.debug;
 
             updateDateConstraints();
             compileTemplates();

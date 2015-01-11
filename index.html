@@ -69,6 +69,12 @@ require([
         triggerElement: '#publishDateTrigger',
         containerElement: '#publishDatePickerContainer',
         locale: $('html').attr('lang'),
+        minWeeksPerMonth: 0,
+        //numberOfMonths: 2,
+        /*numberOfMonths: {
+            before: 1,
+            after: 4
+        },*/
         constraints: {
             minDate: new Date('2010-01-01'),
             maxDate: new Date('2019-12-31')
@@ -78,6 +84,7 @@ require([
             test: '<%- omg %>'
         }
     });
+
     foo = picker;
 });
 
