@@ -109,9 +109,9 @@
             week: 'week',
             weekNumber: 'calendar-week',
             day: 'day',
-            dayPrevMonth: 'day--excess day--prevMonth',
-            dayNextMonth: 'day--excess day--nextMonth',
-            isDisabled: 'is-disabled',
+            dayPrevMonth: 'day--prev-month',
+            dayNextMonth: 'day--next-month',
+            isDisabled: 'day--disabled',
             isEmpty: 'is-empty',
 
 
