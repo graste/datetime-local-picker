@@ -65,9 +65,8 @@
         displayFormat: 'L LTS',
 
         outputFormat: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
+        outputElement: null,
         output: {
-            element: null,
-            format: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
             forceHours: null,
             forceMinutes: null,
             forceSeconds: null,
@@ -75,67 +74,17 @@
         },
 
         constraints: {
-            minDate: null,
-            maxDate: null,
-            minYear: 0,
-            maxYear: 3000,
+            minDate: null, // must be new Date(…) or a string compatible to inputFormats
+            maxDate: null, // must be new Date(…) or a string compatible to inputFormats
+            // alternative:
             minMonth: 0,
-            maxMonth: 11
+            minYear: 2015,
+            maxMonth: 11,
+            maxYear: 2030,
         },
 
-
-
-
-
-        defaultDate: null,
-        defaultHours: 0,
-        defaultMinutes: 0,
-        defaultSeconds: 0,
-        defaultMilliseconds: 0,
-
-        yearRange: [0, 10],
-
-        isRTL: false,
-
-        showOnFocus: true,
-        showOnAutofocus: true,
-        showYearSelect: true,
-        showMonthSelect: true,
-        showWeekNumbers: true,
-        showExcessDays: true,
-        showTime: true,
-        showSeconds: false,
-        showMilliseconds: false,
-
-        highlight: [
-            {
-                date: '2015-01-24',
-                css: 'holidays',
-                title: 'some short title'
-            },
-            {
-                date: '2015-01-24T12:45:00.000',
-                css: 'event'
-            }
-        ],
-        //highlightFunctions: [],
-
-        disable: [ new Date(), new Date() ],
-        //disableFunctions: [],
         disableWeekends: false,
-
-        disableInput: false,
-
-        position: 'bottom left',
-        autoReposition: true,
-        shouldReflow: true,
-
-
-        use24hour: true,
-        hourFormat: '',
-        meridiem: '',
-        yearSuffix: '',
-        showMonthAfterYear: false,
+        disabledDates: [],
 
         onBeforeShow: null,
         onBeforeHide: null,
@@ -153,9 +102,6 @@
             //calendarWeekdays: '…',
         },
 
-        htmlAttributes: {
-        },
-
         cssPrefix: 'dtlp-',
         cssClasses: {
             dayName: 'weekday',
@@ -169,43 +115,68 @@
             isEmpty: 'is-empty',
 
 
-
             container: 'wrapper',
-
-            head: 'head',
-            body: 'body',
-            foot: 'foot',
-
-            title: 'title',
-            label: 'label',
-
             calendar: 'calendar',
             multipleMonths: 'multiple-months',
             singleMonth: 'single-month',
-
             month: 'month',
             year: 'year',
-
-            table: 'table',
-            row: 'row',
-
             isVisible: 'is-visible',
             isToday: 'is-today',
             isSelected: 'is-selected',
             isBound: 'is-bound',
-
             button: 'button',
             prevMonth: 'prev-month',
             nextMonth: 'next-month',
-
             select: 'select',
             selectMonth: 'select-month',
             selectYear: 'select-year',
-
             selectTime: 'select-time',
             timePicker: 'time-picker'
         },
 
+        // from here on: TBD
+
+        defaultDate: null,
+        defaultHours: 0,
+        defaultMinutes: 0,
+        defaultSeconds: 0,
+        defaultMilliseconds: 0,
+        yearRange: [0, 10],
+        isRTL: false,
+        showOnFocus: true,
+        showOnAutofocus: true,
+        showYearSelect: true,
+        showMonthSelect: true,
+        showWeekNumbers: true,
+        showExcessDays: true,
+        showTime: true,
+        showSeconds: false,
+        showMilliseconds: false,
+        highlight: [
+            {
+                date: '2015-01-24',
+                css: 'holidays',
+                title: 'some short title'
+            },
+            {
+                date: '2015-01-24T12:45:00.000',
+                css: 'event'
+            }
+        ],
+        //highlightFunctions: [],
+
+        disableInput: false,
+        position: 'bottom left',
+        autoReposition: true,
+        shouldReflow: true,
+        use24hour: true,
+        hourFormat: '',
+        meridiem: '',
+        yearSuffix: '',
+        showMonthAfterYear: false,
+        htmlAttributes: {
+        },
         i18n: {
             prevMonth: '',
             nextMonth: '',
@@ -221,9 +192,7 @@
 
             clear: '',
             today: '',
-        },
-
-        even: 'more'
+        }
     };
 
     function getRandomString() {
@@ -645,6 +614,18 @@
                 return true;
             }
 
+            /*
+            _.forEach(settings.disabledDates, function(value, index, collection) {
+                if (_.isFunction(value)) {
+                    if (value(moment(date)) === true) {
+                        return true;
+                    }
+                } else if (value.isSame(date, 'day')) {
+                    return true;
+                }
+            });
+            */
+
             return false;
         }
 
@@ -733,11 +714,11 @@
             var min_date = parseDate(settings.constraints.minDate);
             var max_date = parseDate(settings.constraints.maxDate);
 
-            var min_year = default_settings.minYear;
-            var min_month = default_settings.minMonth;
+            var min_year = settings.constraints.minYear || default_settings.constraints.minYear;
+            var min_month = settings.constraints.minMonth || default_settings.constraints.minMonth;
 
-            var max_year = default_settings.maxYear;
-            var max_month = default_settings.maxMonth;
+            var max_year = settings.constraints.maxYear || default_settings.constraints.maxYear;
+            var max_month = settings.constraints.maxMonth || default_settings.constraints.maxMonth;
 
             if ((min_date.isValid() && max_date.isValid()) && max_date.isBefore(min_date)) {
                 var temp = max_date.clone();
@@ -745,27 +726,32 @@
                 min_date = temp;
             }
 
+            if (!_.isNumber(min_year) || !_.isNumber(max_year) || !_.isNumber(min_month) || !_.isNumber(max_month) ||
+                _.isNaN(min_year) || _.isNaN(max_year) || _.isNaN(min_month) || _.isNaN(max_year)
+            ) {
+                throw new Error('Setting constraints.minYear/maxYear/minMonth/maxMonth must be positive integer values.');
+            }
+
             if (min_date.isValid()) {
                 min_year = min_date.year();
                 min_month = min_date.month();
+            } else {
+                min_date = moment(min_year, 'YYYY', settings.locale, true);
+                min_date.startOf('year').month(min_month);
             }
 
             if (max_date.isValid()) {
                 max_year = max_date.year();
                 max_month = max_date.month();
+            } else {
+                max_date = moment(max_year, 'YYYY', settings.locale, true);
+                max_date.endOf('year').month(max_month);
             }
 
             settings.constraints = {
                 minDate: min_date,
-                maxDate: max_date,
-
-                minYear: min_year,
-                maxYear: max_year,
-
-                minMonth: min_month,
-                maxMonth: max_month
+                maxDate: max_date
             };
-            console.log(settings.constraints);
         }
 
         function compileTemplates() {

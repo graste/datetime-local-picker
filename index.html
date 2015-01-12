@@ -72,14 +72,18 @@ require([
         //direction: $('html').attr('dir'),
         minWeeksPerMonth: 6,
         //numberOfMonths: 2,
-        /*numberOfMonths: {
-            before: 0,
-            after: 23
-        },*/
+        numberOfMonths: {
+            before: 2,
+            after: 6
+        },
         disableWeekends: true,
         constraints: {
-            minDate: new Date('2015-01-14'),
-            maxDate: new Date('2015-05-14')
+            //minDate: new Date('2015-01-14'),
+            //maxDate: new Date('2015-05-14'),
+            minYear: 2014,
+            minMonth: 1,
+            maxYear: 2015,
+            maxMonth: 10
         },
         templates: {
             calendar: calendar_tmpl,
