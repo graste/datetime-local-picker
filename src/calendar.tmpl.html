@@ -5,7 +5,7 @@
     <div class="calendar__body">
         <div class="weekdays">
             <div>
-                <div class="calendar-week is-empty"><!-- --></div>
+                <div class="calendar-week <%- settings.cssClasses.isEmpty %>"><!-- --></div>
                 <% _.forEach(calendarWeekdays, function(weekday) { %>
                 <div class="<%- weekday.css %>"><%- weekday.content %></div>
                 <% }); %>
@@ -22,5 +22,6 @@
             <% }); %>
         </div>
     </div>
+    <div class="calendar__footer"><%- calendarFooter.content %></div>
 </div>
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" dir="ltr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,7 +24,7 @@ input {
 
 <h1>datetime-local-picker</h1>
 
-<div class="dtp" touch-action="none">
+<div class="dtp" touch-action="scroll">
     <label for="publishDate" class="dtp__label">Publish date:</label>
     <input type="text"
         name="publishDate"
@@ -69,20 +69,23 @@ require([
         triggerElement: '#publishDateTrigger',
         containerElement: '#publishDatePickerContainer',
         locale: $('html').attr('lang'),
-        minWeeksPerMonth: 0,
+        //direction: $('html').attr('dir'),
+        minWeeksPerMonth: 6,
         //numberOfMonths: 2,
         /*numberOfMonths: {
-            before: 1,
-            after: 4
+            before: 0,
+            after: 23
         },*/
+        disableWeekends: true,
         constraints: {
-            minDate: new Date('2010-01-01'),
-            maxDate: new Date('2019-12-31')
+            minDate: new Date('2015-01-14'),
+            maxDate: new Date('2015-05-14')
         },
         templates: {
             calendar: calendar_tmpl,
             test: '<%- omg %>'
-        }
+        },
+        debug: false
     });
 
     foo = picker;

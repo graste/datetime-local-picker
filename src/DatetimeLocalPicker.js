@@ -165,6 +165,8 @@
             day: 'day',
             dayPrevMonth: 'day--excess day--prevMonth',
             dayNextMonth: 'day--excess day--nextMonth',
+            isDisabled: 'is-disabled',
+            isEmpty: 'is-empty',
 
 
 
@@ -189,8 +191,6 @@
 
             isVisible: 'is-visible',
             isToday: 'is-today',
-            isEmpty: 'is-empty',
-            isDisabled: 'is-disabled',
             isSelected: 'is-selected',
             isBound: 'is-bound',
 
@@ -313,7 +313,12 @@
         };
 
         function parseDate(mixed) {
-            var d = moment(mixed, settings.inputFormats, settings.locale, settings.parseStrict);
+            var d;
+            if (moment.isDate(mixed)) {
+                d = moment(mixed);
+            } else {
+                d = moment(mixed, settings.inputFormats, settings.locale, settings.parseStrict);
+            }
             d.locale(settings.locale);
             return d;
         }
@@ -434,7 +439,7 @@
             date = moment(date); // clone just in case someone modifies the date while rendering
             return settings.templates.calendar({
                 calendarHeader: prepareCalendarHeader(date),
-                calendarFooter: '',
+                calendarFooter: prepareCalendarFooter(date),
                 calendarWeekdays: prepareCalendarWeekdays(date),
                 calendarWeeks: prepareCalendarWeeks(date),
                 localeData: date.localeData(),
@@ -454,6 +459,23 @@
             // optionally use a compiled template for the content property
             if (settings.templates.calendarHeader && _.isFunction(settings.templates.calendarHeader)) {
                 data.content = settings.templates.calendarHeader(data);
+            }
+
+            return data;
+        }
+
+        function prepareCalendarFooter(date) {
+            var data = {
+                date: moment(date),
+                year: date.format('YYYY'),
+                month: date.format('MMMM'),
+                title: date.format('MMMM YYYY'),
+                content: ''
+            };
+
+            // optionally use a compiled template for the content property
+            if (settings.templates.calendarFooter && _.isFunction(settings.templates.calendarFooter)) {
+                data.content = settings.templates.calendarFooter(data);
             }
 
             return data;
@@ -492,6 +514,11 @@
 
                 weekdays.push(weekday_data);
             }
+
+            /* unneccessary when container element has html attribute dir="rtl" set
+            if (settings.isRTL) {
+                weekdays.reverse();
+            }*/
 
             return weekdays;
         }
@@ -550,15 +577,18 @@
                         css: settings.cssClasses.week,
                         weekNumberCSS: settings.cssClasses.weekNumber,
                         num: render_date.week(),
-                        content: render_date.week(),
+                        content: render_date.format('WW'),
                         days: []
                     };
                 }
 
                 // css for one calendar day
-                day_css = settings.cssClasses.day;
+                day_css = settings.cssClasses.day || '';
                 if (isWeekend(render_date)) {
                     day_css += ' ' + settings.cssClasses.weekend;
+                    if (settings.disableWeekends) {
+                        day_css += ' ' + settings.cssClasses.isDisabled;
+                    }
                 }
                 if (idx < days_before) {
                     day_css += ' ' + settings.cssClasses.dayPrevMonth;
@@ -567,11 +597,12 @@
                 }
 
                 day_content = render_date.date();
-                if (isDisabled(render_date)) {
-                    day_content = settings.template.disabledDay({
+                if (!isWeekend(render_date) && isDisabled(render_date)) {
+                    day_css += ' ' + settings.cssClasses.isDisabled;
+                    /*day_content = settings.template.disabledDay({
                         date: render_date,
                         settings: settings
-                    });
+                    });*/
                 }
 
                 // data for one calendar day
@@ -593,6 +624,13 @@
                 render_date.add(1, 'day');
             }
 
+            /* unneccessary when container element has html attribute dir="rtl" set
+            if (settings.isRTL) {
+                _.forEach(weeks, function(week_data, index, collection) {
+                    week_data.days.reverse();
+                });
+            }*/
+
             if (settings.debug) {
                 console.log('weeks_data=', weeks);
             }
@@ -601,6 +639,12 @@
         }
 
         function isDisabled(date) {
+            var c = settings.constraints;
+
+            if (!date.isBetween(c.minDate, c.maxDate)) {
+                return true;
+            }
+
             return false;
         }
 
@@ -721,6 +765,7 @@
                 minMonth: min_month,
                 maxMonth: max_month
             };
+            console.log(settings.constraints);
         }
 
         function compileTemplates() {
