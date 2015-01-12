@@ -109,8 +109,8 @@
             week: 'week',
             weekNumber: 'calendar-week',
             day: 'day',
-            dayPrevMonth: 'day--prev-month',
-            dayNextMonth: 'day--next-month',
+            dayPrevMonth: 'day--excess day--prev-month',
+            dayNextMonth: 'day--excess day--next-month',
             isDisabled: 'day--disabled',
             isEmpty: 'is-empty',
 
@@ -405,7 +405,7 @@
         }
 
         function renderCalendarMonth(date) {
-            date = moment(date); // clone just in case someone modifies the date while rendering
+            date = moment(date).startOf('month'); // clone just in case someone modifies the date while rendering
             return settings.templates.calendar({
                 calendarHeader: prepareCalendarHeader(date),
                 calendarFooter: prepareCalendarFooter(date),
@@ -413,7 +413,8 @@
                 calendarWeeks: prepareCalendarWeeks(date),
                 localeData: date.localeData(),
                 settings: settings,
-                currentDate: date
+                currentDate: current_date,
+                currentMonth: date
             });
         }
 
