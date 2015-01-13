@@ -375,49 +375,49 @@
 
         function handleClick(ev) {
             var day = $(ev.target).parents('[data-iso-date]');
-            selectDate(parseDate(day.attr('data-iso-date')));
+            var date = parseDate(day.attr('data-iso-date'));
+            if (!isDisabled(date)) {
+                selectDate(date);
+            }
             updateView();
         }
 
         function handleKeydown(ev) {
-            console.log(ev);
+            var next;
             switch (ev.keyCode) {
                 case 37: // left
                     if (settings.debug) { console.log('LEFT'); }
-                    if (settings.isRTL) {
-                        selected_date = moment(selected_date).add(1, "day");
-                    } else {
-                        selected_date = moment(selected_date).subtract(1, "day");
+                    ev.preventDefault(); // prevent viewport scrolling
+                    if (gotoPreviousSelectableDate('day')) {
+                        updateView();
                     }
-                    updateView();
                     break;
                 case 39: // right
                     if (settings.debug) { console.log('RIGHT'); }
-                    if (settings.isRTL) {
-                        selected_date = moment(selected_date).subtract(1, "day");
-                    } else {
-                        selected_date = moment(selected_date).add(1, "day");
+                    ev.preventDefault(); // prevent viewport scrolling
+                    if (gotoNextSelectableDate('day')) {
+                        updateView();
                     }
-                    updateView();
                     break;
                 case 38: // up
                     if (settings.debug) { console.log('UP'); }
-                    selected_date = moment(selected_date).subtract(1, "week");
-                    updateView();
+                    ev.preventDefault(); // prevent viewport scrolling
+                    if (gotoPreviousSelectableDate('week')) {
+                        updateView();
+                    }
                     break;
                 case 40: // down
                     if (settings.debug) { console.log('DOWN'); }
-                    selected_date = moment(selected_date).add(1, "week");
-                    updateView();
+                    ev.preventDefault(); // prevent viewport scrolling
+                    if (gotoNextSelectableDate('week')) {
+                        updateView();
+                    }
                     break;
                 case 9: // tab
                     if (settings.debug) { console.log('TAB'); }
-                    console.log('TAB');
                     break;
                 /*case 13: // enter
                     console.log('ENTER - accept selected date as current date');
-                    selectDate(selected_date);
-                    updateView();
                     break;
                     */
                 case 27: // escape
@@ -430,7 +430,6 @@
                 default:
                     break;
             }
-
         }
 
         function handleInputElementPointerUp(ev) {
@@ -447,6 +446,45 @@
             updateView();
         }
 
+        function gotoPreviousSelectableDate(period) {
+            var prev = moment(selected_date);
+            period = period || 'day';
+            do {
+                if (settings.isRTL && period === 'day') {
+                    prev.add(1, period);
+                } else {
+                    prev.subtract(1, period);
+                }
+                console.log(prev.toString());
+            } while (isDisabled(prev) && prev.isAfter(settings.constraints.minDate));
+
+            if (!isDisabled(prev)) {
+                selected_date = moment(prev);
+                return true;
+            }
+
+            return false;
+        }
+
+        function gotoNextSelectableDate(period) {
+            var next = moment(selected_date);
+            period = period || 'day';
+            do {
+                if (settings.isRTL && period === 'day') {
+                    next.subtract(1, period);
+                } else {
+                    next.add(1, period);
+                }
+            } while (isDisabled(next) && next.isBefore(settings.constraints.maxDate));
+
+            if (!isDisabled(next)) {
+                selected_date = moment(next);
+                return true;
+            }
+
+            return false;
+        }
+
         function toggleContainer() {
             is_visible = !is_visible;
             if (is_visible) {
@@ -455,16 +493,19 @@
                 hideContainer();
             }
         }
+
         function showContainer() {
             draw();
             bindContainerEventHandlers();
-            $container_element.show();
             updateView();
+            $container_element.show();
+            is_visible = true;
         }
 
         function hideContainer() {
             unbindContainerEventHandlers();
             $container_element.hide();
+            is_visible = false;
         }
 
         function updateView() {
@@ -733,17 +774,13 @@
                 day_css = settings.cssClasses.day || '';
                 if (isWeekend(render_date)) {
                     day_css += ' ' + settings.cssClasses.weekend;
-                    if (settings.disableWeekends) {
-                        day_valid = false;
-                        day_css += ' ' + settings.cssClasses.isDisabled;
-                    }
                 }
                 if (idx < days_before) {
                     day_css += ' ' + settings.cssClasses.dayPrevMonth;
                 } else if (idx >= (days_before + days_in_month)) {
                     day_css += ' ' + settings.cssClasses.dayNextMonth;
                 }
-                if (!isWeekend(render_date) && isDisabled(render_date)) {
+                if (isDisabled(render_date)) {
                     day_css += ' ' + settings.cssClasses.isDisabled;
                     day_valid = false;
                 }
@@ -798,6 +835,10 @@
             var c = settings.constraints;
 
             if (!date.isBetween(c.minDate, c.maxDate)) {
+                return true;
+            }
+
+            if (settings.disableWeekends && isWeekend(date)) {
                 return true;
             }
 

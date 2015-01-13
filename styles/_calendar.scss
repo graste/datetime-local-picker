@@ -101,6 +101,10 @@
             .short {
                 display: none;
             }
+
+            .long {
+                display: inline;
+            }
         }
     }
 
@@ -111,6 +115,10 @@
             .short,
             .long {
                 display: none;
+            }
+
+            .min {
+                display: inline;
             }
         }
     }
@@ -124,11 +132,11 @@
 
     }
 
-    .calendar--list {
+    &.calendar--list {
         @include calendar-list;
     }
 
-    .calendar--table {
+    &.calendar--table {
         @include calendar-table;
     }
 

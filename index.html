@@ -38,11 +38,13 @@ input {
     </div>
 </div>
 <div id="output"></div>
+
 <!--
 <div>
     <input dir="rtl" type="datetime-local" value="2015-01-14T13:45:00.123">
 </div>
 -->
+
 <script src="bower_components/pointerevents-polyfill/pointerevents.min.js"></script>
 <script src="bower_components/requirejs/require.js"></script>
 <script>
@@ -74,16 +76,16 @@ require([
         containerElement: '#publishDatePickerContainer',
         locale: $('html').attr('lang'),
         direction: $('html').attr('dir'),
-        minWeeksPerMonth: 0,
+        minWeeksPerMonth: 6,
         numberOfMonths: 2,
         /*numberOfMonths: {
             before: 2,
             after: 6
         },*/
-        disableWeekends: true,
+        disableWeekends: false,
         constraints: {
             minDate: new Date('2015-01-10'),
-            maxDate: new Date('2015-05-14')
+            maxDate: new Date('2015-02-24')
         },
         templates: {
             calendar: calendar_tmpl,
