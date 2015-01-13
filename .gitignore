@@ -29,3 +29,5 @@ node_modules
 
 # installed bower deps
 /bower_components
+
+/.sass-cache

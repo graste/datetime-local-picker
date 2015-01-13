@@ -81,7 +81,22 @@ body {
         background-color: #eee;
     }
 
+    .day--today {
+        background-color: #77f;
+        color: blue;
+    }
 
+    .day--current {
+        background-color: #7f7;
+        color: #000;
+        outline: 1px solid #0f0;
+    }
+
+    .day--selected {
+        background-color: #ccc;
+        color: #000;
+        outline: 1px solid #000;
+    }
 
     @media screen and (max-width: 767px) {
         @include calendar-list-layout;

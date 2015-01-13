@@ -112,8 +112,10 @@
             dayPrevMonth: 'day--excess day--prev-month',
             dayNextMonth: 'day--excess day--next-month',
             isDisabled: 'day--disabled',
+            isSelected: 'day--selected',
+            isCurrent: 'day--current',
+            isToday: 'day--today',
             isEmpty: 'is-empty',
-
 
             container: 'wrapper',
             calendar: 'calendar',
@@ -122,8 +124,6 @@
             month: 'month',
             year: 'year',
             isVisible: 'is-visible',
-            isToday: 'is-today',
-            isSelected: 'is-selected',
             isBound: 'is-bound',
             button: 'button',
             prevMonth: 'prev-month',
@@ -216,6 +216,7 @@
     // constructor function for DatetimeLocalPicker instances
     return function(instance_settings) {
         var current_date;
+        var selected_date;
         var settings = {};
         updateSettings(instance_settings || {});
 
@@ -240,11 +241,13 @@
         var initial_date = parseDate(initial_value);
         if (moment.isMoment(initial_date) && initial_date.isValid()) {
             current_date = moment(initial_date);
-            setCurrentDate(initial_date);
         } else {
+            // TODO set default date to today? yes for the moment…
             current_date = moment();
             current_date.locale(settings.locale);
         }
+        selected_date = moment(current_date).startOf('day');
+        setCurrentDate(current_date);
 
         if (settings.debug) {
             console.log('settings', settings);
@@ -276,17 +279,31 @@
             getCurrentDate: function() {
                 return moment(current_date);
             },
+            getSelectedDate: function() {
+                return moment(selected_date);
+            },
             isWeekend: function(valid_moment) {
                 return isWeekend(valid_moment);
             }
         };
 
+        /**
+         * Creates a new moment instance from the given argument.
+         *
+         * All styles mentioned in the moment docs are supported – except
+         * for ASP.net style strings as those won't work because of strict
+         * "settings.inputFormats" based parsing in the settings' locale..
+         *
+         * @param mixed string or anything moment accepts to create a valid moment instance
+         *
+         * @return moment instance set to locale from settings
+         */
         function parseDate(mixed) {
             var d;
-            if (moment.isDate(mixed)) {
-                d = moment(mixed);
-            } else {
+            if (_.isString(mixed)) {
                 d = moment(mixed, settings.inputFormats, settings.locale, settings.parseStrict);
+            } else {
+                d = moment(mixed);
             }
             d.locale(settings.locale);
             return d;
@@ -321,6 +338,67 @@
                 'keyup.' + settings.logPrefix + ' ',
                 handleInputElementPointerUp
             );
+
+            $input_element.on(
+                'keydown.' + settings.logPrefix,
+                handleInputElementKeydown
+            );
+
+/*
+            $container_element.on(
+                'keydown.' + settings.logPrefix + ' ' +
+                'click.' + settings.logPrefix,
+                //'button',
+                handleInputElementKeydown
+            );
+
+            $container_element.on(
+                'pointerup.' + settings.logPrefix + ' ' +
+                'click.' + settings.logPrefix,
+                function(ev) {
+                    $container_element.find('.'+settings.cssClasses.isSelected+' button').focus();
+                }
+            );
+*/
+        }
+
+        function handleInputElementKeydown(ev) {
+            switch (ev.keyCode) {
+                case 37: // left
+                    console.log('LEFT');
+                    $("[data-iso-date='"+selected_date.toISOString()+"']").removeClass(settings.cssClasses.isSelected);
+                    selected_date = moment(selected_date).subtract(1, "day");
+                    $("[data-iso-date='"+selected_date.toISOString()+"']").addClass(settings.cssClasses.isSelected);
+                    break;
+                case 39: // right
+                    console.log('RIGHT');
+                    $("[data-iso-date='"+selected_date.toISOString()+"']").removeClass(settings.cssClasses.isSelected);
+                    selected_date = moment(selected_date).add(1, "day");
+                    $("[data-iso-date='"+selected_date.toISOString()+"']").addClass(settings.cssClasses.isSelected);
+                    break;
+                case 38: // up
+                    console.log('UP');
+                    $("[data-iso-date='"+selected_date.toISOString()+"']").removeClass(settings.cssClasses.isSelected);
+                    selected_date = moment(selected_date).subtract(1, "week");
+                    $("[data-iso-date='"+selected_date.toISOString()+"']").addClass(settings.cssClasses.isSelected);
+                    break;
+                case 40: // down
+                    console.log('DOWN');
+                    $("[data-iso-date='"+selected_date.toISOString()+"']").removeClass(settings.cssClasses.isSelected);
+                    selected_date = moment(selected_date).add(1, "week");
+                    $("[data-iso-date='"+selected_date.toISOString()+"']").addClass(settings.cssClasses.isSelected);
+                    break;
+                case 13: // enter
+                    console.log('ENTER - accept selected date as current date');
+                    setCurrentDate(moment(selected_date));
+                    break;
+                case 27: // escape
+                    console.log('ESCAPE - hide picker if necessary');
+                    break;
+                default:
+                    break;
+            }
+            console.log(current_date.toISOString(), selected_date.toISOString());
         }
 
         function handleInputElementPointerUp(ev) {
@@ -338,7 +416,7 @@
 
         function setCurrentDate(date) {
             if (moment.isMoment(date) && date.isValid()) {
-                current_date = moment(date).local();
+                current_date = moment(date);
                 setHiddenElementDate(date);
                 setInputElementDate(date);
             } else {
@@ -532,11 +610,12 @@
                 console.log('  end=', end_date.toString());
             }
 
+            var day_valid = true;
             var day_css;
             var day_content;
             var day_data = {};
             var week_data = {};
-            var render_date = moment(start_date);
+            var render_date = moment(start_date).startOf('day');
             var idx;
 
             for (idx = 0; idx < num_days; idx++) {
@@ -552,11 +631,15 @@
                     };
                 }
 
+                day_valid = true;
+                day_content = render_date.date();
+
                 // css for one calendar day
                 day_css = settings.cssClasses.day || '';
                 if (isWeekend(render_date)) {
                     day_css += ' ' + settings.cssClasses.weekend;
                     if (settings.disableWeekends) {
+                        day_valid = false;
                         day_css += ' ' + settings.cssClasses.isDisabled;
                     }
                 }
@@ -565,20 +648,27 @@
                 } else if (idx >= (days_before + days_in_month)) {
                     day_css += ' ' + settings.cssClasses.dayNextMonth;
                 }
-
-                day_content = render_date.date();
                 if (!isWeekend(render_date) && isDisabled(render_date)) {
                     day_css += ' ' + settings.cssClasses.isDisabled;
+                    day_valid = false;
                     /*day_content = settings.template.disabledDay({
                         date: render_date,
                         settings: settings
                     });*/
+                }
+                if (today.isSame(render_date, 'day')) {
+                    day_css += ' ' + settings.cssClasses.isToday;
+                }
+                if (render_date.isSame(selected_date, 'day')) {
+                    day_css += ' ' + settings.cssClasses.isSelected;
                 }
 
                 // data for one calendar day
                 day_data = {
                     css: day_css,
                     date: moment(render_date),
+                    isoDate: render_date.toISOString(),
+                    dayValid: day_valid,
                     content: day_content
                 };
 
