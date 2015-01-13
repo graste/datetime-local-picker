@@ -15,20 +15,9 @@
         text-align: right;
     }
 
-    .day {
-        position: relative;
-        &::after {
-            position: absolute;
-            bottom: 2px;
-            left: 2px;
-            right: 2px;
-            font-size: 8px;
-        }
-    }
-
     .day:not(.day--excess):hover {
         background-color: #ccc;
-        &::after {
+        button::after {
             content: "hover";
         }
     }
@@ -46,7 +35,7 @@
     .day--today {
         background-color: #77f;
         color: blue;
-        &::after {
+        button::after {
             content: "today";
         }
     }
@@ -55,15 +44,15 @@
         background-color: #7f7;
         color: #000;
         outline: 1px solid #0f0;
-        &::after {
+        button::after {
             content: "current";
         }
     }
 
     .day--selected:not(.day--excess) {
         color: #000;
-        outline: 1px solid #000;
-        &::after {
+        background-color: #f77;
+        button::after {
             content: "selected";
         }
     }
@@ -78,6 +67,14 @@
 
         font-size: inherit;
         color: inherit;
+        position: relative;
+        &::after {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            right: 2px;
+            font-size: 8px;
+        }
     }
 
     @mixin calendar-list {

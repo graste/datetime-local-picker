@@ -44,17 +44,9 @@ body {
   .calendar .calendar-week {
     padding: 1em;
     text-align: right; }
-  .calendar .day {
-    position: relative; }
-    .calendar .day::after {
-      position: absolute;
-      bottom: 2px;
-      left: 2px;
-      right: 2px;
-      font-size: 8px; }
   .calendar .day:not(.day--excess):hover {
     background-color: #ccc; }
-    .calendar .day:not(.day--excess):hover::after {
+    .calendar .day:not(.day--excess):hover button::after {
       content: "hover"; }
   .calendar .weekday,
   .calendar .calendar-week,
@@ -65,18 +57,18 @@ body {
   .calendar .day--today {
     background-color: #77f;
     color: blue; }
-    .calendar .day--today::after {
+    .calendar .day--today button::after {
       content: "today"; }
   .calendar .day--current:not(.day--excess) {
     background-color: #7f7;
     color: #000;
     outline: 1px solid #0f0; }
-    .calendar .day--current:not(.day--excess)::after {
+    .calendar .day--current:not(.day--excess) button::after {
       content: "current"; }
   .calendar .day--selected:not(.day--excess) {
     color: #000;
-    outline: 1px solid #000; }
-    .calendar .day--selected:not(.day--excess)::after {
+    background-color: #f77; }
+    .calendar .day--selected:not(.day--excess) button::after {
       content: "selected"; }
   .calendar button {
     display: inline-block;
@@ -86,7 +78,14 @@ body {
     background-color: transparent;
     text-align: right;
     font-size: inherit;
-    color: inherit; }
+    color: inherit;
+    position: relative; }
+    .calendar button::after {
+      position: absolute;
+      bottom: 2px;
+      left: 2px;
+      right: 2px;
+      font-size: 8px; }
   @media screen and (max-width: 767px) {
     .calendar .calendar__header {
       padding-top: 1em; }
