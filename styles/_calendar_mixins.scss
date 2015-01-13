@@ -1,4 +1,5 @@
 @mixin calendar-table-layout {
+    display: inline-block;
 
     .calendar__body {
         display: table;
@@ -30,7 +31,23 @@
 }
 
 @mixin calendar-list-layout {
-    div {
+    .calendar__header {
+        padding-top: 1em;
+    }
+
+    .calendar-week {
+        text-align: left;
+    }
+
+    .weeks,
+    .week,
+    .day {
         display: block;
     }
+
+    .weekday,
+    .day--excess {
+        display: none;
+    }
 }
+

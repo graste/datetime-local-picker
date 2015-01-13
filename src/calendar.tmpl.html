@@ -17,7 +17,11 @@
                 <div class="<%- week.weekNumberCSS %>"><%- week.content %></div>
                 <% _.forEach(week.days, function(day) { %>
                 <div class="<%- day.css %>" data-iso-date="<%- day.isoDate %>">
-                    <button type="button"><%- day.date.date() %></button>
+                    <button type="button">
+                        <span class="min"><%- day.date.date() %></span>
+                        <span class="short"><%- day.date.format("L") %></span>
+                        <span class="long"><%- day.date.format("dddd LL") %></span>
+                    </button>
                 </div>
                 <% }); %>
             </div>

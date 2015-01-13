@@ -1,0 +1,36 @@
+.datepicker {
+    position: relative;
+
+    background-color: white;
+
+
+    @media screen and (min-width: 768px) {
+        display: inline-block;
+        padding: 1em;
+    }
+}
+
+.datepicker__pager {
+    position: absolute;
+    top: 1em;
+    left: 1em;
+    right: 1em;
+
+
+    a {
+        text-decoration: none;
+    }
+
+    .previous_year,
+    .previous_month {
+        float: left;
+        margin-right: 1em;
+    }
+
+    .next_year,
+    .next_month {
+        float: right;
+        margin-left: 1em;
+    }
+}
+

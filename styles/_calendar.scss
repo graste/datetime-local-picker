@@ -1,0 +1,129 @@
+@import "calendar_mixins";
+
+.calendar {
+    background-color: white;
+
+    .calendar__header {
+        padding: 1em;
+        padding-top: 0;
+        text-align: center;
+    }
+
+    .weekday,
+    .calendar-week {
+        padding: 1em;
+        text-align: right;
+    }
+
+    .day {
+        position: relative;
+        &::after {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            right: 2px;
+            font-size: 8px;
+        }
+    }
+
+    .day:not(.day--excess):hover {
+        background-color: #ccc;
+        &::after {
+            content: "hover";
+        }
+    }
+
+    .weekday,
+    .calendar-week,
+    .day--excess {
+        color: #bbb;
+    }
+
+    .weekend {
+        background-color: #eee;
+    }
+
+    .day--today {
+        background-color: #77f;
+        color: blue;
+        &::after {
+            content: "today";
+        }
+    }
+
+    .day--current:not(.day--excess) {
+        background-color: #7f7;
+        color: #000;
+        outline: 1px solid #0f0;
+        &::after {
+            content: "current";
+        }
+    }
+
+    .day--selected:not(.day--excess) {
+        color: #000;
+        outline: 1px solid #000;
+        &::after {
+            content: "selected";
+        }
+    }
+
+    button {
+        display: inline-block;
+        width: 100%;
+        padding: 1em;
+        border: none;
+        background-color: transparent;
+        text-align: right;
+
+        font-size: inherit;
+        color: inherit;
+    }
+
+    @mixin calendar-list {
+
+        @include calendar-list-layout;
+
+        .calendar-week {
+            color: inherit;
+            border-bottom: 3px solid #ccc;
+        }
+
+        .day {
+            .min,
+            .short {
+                display: none;
+            }
+        }
+    }
+
+    @mixin calendar-table {
+        @include calendar-table-layout;
+
+        .day {
+            .short,
+            .long {
+                display: none;
+            }
+        }
+    }
+
+    @media screen and (max-width: 767px) {
+        @include calendar-list;
+    }
+
+    @media screen and (min-width: 768px) {
+        @include calendar-table;
+
+    }
+
+    .calendar--list {
+        @include calendar-list;
+    }
+
+    .calendar--table {
+        @include calendar-table;
+    }
+
+}
+

@@ -40,56 +40,71 @@ body {
     padding: 1em;
     padding-top: 0;
     text-align: center; }
-  .calendar .day,
   .calendar .weekday,
   .calendar .calendar-week {
     padding: 1em;
     text-align: right; }
   .calendar .day {
-    padding: 0;
-    margin: 0; }
-  .calendar .day:not(.day--excess) button:hover {
+    position: relative; }
+    .calendar .day::after {
+      position: absolute;
+      bottom: 2px;
+      left: 2px;
+      right: 2px;
+      font-size: 8px; }
+  .calendar .day:not(.day--excess):hover {
     background-color: #ccc; }
-  .calendar .weekday button,
-  .calendar .calendar-week button,
-  .calendar .day--excess button {
+    .calendar .day:not(.day--excess):hover::after {
+      content: "hover"; }
+  .calendar .weekday,
+  .calendar .calendar-week,
+  .calendar .day--excess {
     color: #bbb; }
-  .calendar .weekend button {
+  .calendar .weekend {
     background-color: #eee; }
-  .calendar .day button {
-    width: 100%;
-    height: 100%;
-    border: 1px solid transparent;
-    background: transparent; }
-  .calendar .day--today button {
+  .calendar .day--today {
     background-color: #77f;
     color: blue; }
-  .calendar .day--selected button {
-    background-color: #ccc;
+    .calendar .day--today::after {
+      content: "today"; }
+  .calendar .day--current:not(.day--excess) {
+    background-color: #7f7;
     color: #000;
-    border: 1px solid #000; }
-  .calendar .day--current button {
-    background-color: #7e7;
+    outline: 1px solid #0f0; }
+    .calendar .day--current:not(.day--excess)::after {
+      content: "current"; }
+  .calendar .day--selected:not(.day--excess) {
     color: #000;
-    border: 1px solid #0f0; }
+    outline: 1px solid #000; }
+    .calendar .day--selected:not(.day--excess)::after {
+      content: "selected"; }
+  .calendar button {
+    display: inline-block;
+    width: 100%;
+    padding: 1em;
+    border: none;
+    background-color: transparent;
+    text-align: right;
+    font-size: inherit;
+    color: inherit; }
   @media screen and (max-width: 767px) {
-    .calendar div {
-      display: block; }
     .calendar .calendar__header {
       padding-top: 1em; }
+    .calendar .calendar-week {
+      text-align: left; }
+    .calendar .weeks,
+    .calendar .week,
+    .calendar .day {
+      display: block; }
     .calendar .weekday,
     .calendar .day--excess {
       display: none; }
     .calendar .calendar-week {
-      text-align: left;
       color: inherit;
       border-bottom: 3px solid #ccc; }
-      .calendar .calendar-week::before {
-        content: "Week "; }
-    .calendar .day::before {
-      content: attr(data-day-name);
-      float: left;
-      color: #bbb; } }
+    .calendar .day .min,
+    .calendar .day .short {
+      display: none; } }
   @media screen and (min-width: 768px) {
     .calendar {
       display: inline-block; }
@@ -106,4 +121,43 @@ body {
       .calendar .week {
         display: table-row; }
       .calendar .day {
-        display: table-cell; } }
+        display: table-cell; }
+      .calendar .day .short,
+      .calendar .day .long {
+        display: none; } }
+  .calendar .calendar--list .calendar__header {
+    padding-top: 1em; }
+  .calendar .calendar--list .calendar-week {
+    text-align: left; }
+  .calendar .calendar--list .weeks,
+  .calendar .calendar--list .week,
+  .calendar .calendar--list .day {
+    display: block; }
+  .calendar .calendar--list .weekday,
+  .calendar .calendar--list .day--excess {
+    display: none; }
+  .calendar .calendar--list .calendar-week {
+    color: inherit;
+    border-bottom: 3px solid #ccc; }
+  .calendar .calendar--list .day .min,
+  .calendar .calendar--list .day .short {
+    display: none; }
+  .calendar .calendar--table {
+    display: inline-block; }
+    .calendar .calendar--table .calendar__body {
+      display: table; }
+    .calendar .calendar--table .weekdays {
+      display: table-header-group; }
+      .calendar .calendar--table .weekdays > div {
+        display: table-row; }
+        .calendar .calendar--table .weekdays > div > div {
+          display: table-cell; }
+    .calendar .calendar--table .weeks {
+      display: table-row-group; }
+    .calendar .calendar--table .week {
+      display: table-row; }
+    .calendar .calendar--table .day {
+      display: table-cell; }
+    .calendar .calendar--table .day .short,
+    .calendar .calendar--table .day .long {
+      display: none; }
