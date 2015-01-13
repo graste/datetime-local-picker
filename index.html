@@ -38,7 +38,11 @@ input {
     </div>
 </div>
 <div id="output"></div>
-
+<!--
+<div>
+    <input dir="rtl" type="datetime-local" value="2015-01-14T13:45:00.123">
+</div>
+-->
 <script src="bower_components/pointerevents-polyfill/pointerevents.min.js"></script>
 <script src="bower_components/requirejs/require.js"></script>
 <script>
@@ -69,7 +73,7 @@ require([
         triggerElement: '#publishDateTrigger',
         containerElement: '#publishDatePickerContainer',
         locale: $('html').attr('lang'),
-        //direction: $('html').attr('dir'),
+        direction: $('html').attr('dir'),
         minWeeksPerMonth: 0,
         numberOfMonths: 2,
         /*numberOfMonths: {

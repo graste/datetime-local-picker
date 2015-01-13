@@ -24,6 +24,7 @@
         utcOffsetElement: null,
 
         locale: 'en',
+        direction: 'rtl',
         parseStrict: true,
 
         // must be given per locale as moment doesn't include this
@@ -206,6 +207,10 @@
         return undefined;
     }
 
+    function isModifierKey(key) {
+        return key === 'ctrl' || key === 'meta' || key === 'alt' || key === 'shift';
+    }
+
     function getDaysInMonth(moment_or_year, month) {
         if (moment.isMoment(moment_or_year)) {
             return moment_or_year.daysInMonth();
@@ -215,8 +220,10 @@
 
     // constructor function for DatetimeLocalPicker instances
     return function(instance_settings) {
+        // define some global variables
         var current_date;
         var selected_date;
+        var is_visible = false;
         var settings = {};
         updateSettings(instance_settings || {});
 
@@ -285,6 +292,26 @@
             },
             isWeekend: function(valid_moment) {
                 return isWeekend(valid_moment);
+            },
+            unbind: function() {
+                unbindEventHandlers();
+                return this;
+            },
+            bind: function() {
+                bindEventHandlers();
+                return this;
+            },
+            toggle: function() {
+                toggleContainer();
+                return this;
+            },
+            show: function() {
+                showContainer();
+                return this;
+            },
+            hide: function() {
+                hideContainer();
+                return this;
             }
         };
 
@@ -311,37 +338,39 @@
         }
 
         function bindEventHandlers() {
-            /*
-            var events = [
-                'pointerdown',
-                'pointerup',
-                'pointermove',
-                'pointerover',
-                'pointerout',
-                'pointerenter',
-                'pointerleave',
-                'click'
-            ].join(' ');
-            */
-
-            $trigger_element.on('click.' + settings.logPrefix, function(ev) {
-                draw();
-                updateView();
-            });
+            //var pointerevents = ['pointerdown', 'pointerup', 'pointermove', 'pointerover', 'pointerout', 'pointerenter', 'pointerleave', 'click'].join(' ');
 
             $input_element.on('change.' + settings.logPrefix, handleInputElementChange);
-            $hidden_element.on('change.' + settings.logPrefix, function(ev) {
-                console.log('hidden value: ' + $hidden_element.val());
-            });
-
             $input_element.on(
                 'pointerup.' + settings.logPrefix + ' ' +
                 'keyup.' + settings.logPrefix + ' ',
                 handleInputElementPointerUp
             );
 
+            $hidden_element.on('change.' + settings.logPrefix, function(ev) {
+                console.log('hidden value: ' + $hidden_element.val());
+            });
+
+            $trigger_element.on('click.' + settings.logPrefix, function(ev) {
+                toggleContainer();
+            });
+        }
+
+        function unbindEventHandlers() {
+            $trigger_element.off('.' + settings.logPrefix);
+            $hidden_element.off('.' + settings.logPrefix);
+            $input_element.off('.' + settings.logPrefix);
+
+            unbindContainerEventHandlers();
+        }
+
+        function bindContainerEventHandlers() {
             $container_element.on('keydown.' + settings.logPrefix, 'button', handleKeydown);
             $container_element.on('click.' + settings.logPrefix, 'button', handleClick);
+        }
+
+        function unbindContainerEventHandlers() {
+            $container_element.off('.'+settings.logPrefix);
         }
 
         function handleClick(ev) {
@@ -351,35 +380,57 @@
         }
 
         function handleKeydown(ev) {
+            console.log(ev);
             switch (ev.keyCode) {
                 case 37: // left
-                    console.log('LEFT');
-                    selected_date = moment(selected_date).subtract(1, "day");
+                    if (settings.debug) { console.log('LEFT'); }
+                    if (settings.isRTL) {
+                        selected_date = moment(selected_date).add(1, "day");
+                    } else {
+                        selected_date = moment(selected_date).subtract(1, "day");
+                    }
+                    updateView();
                     break;
                 case 39: // right
-                    console.log('RIGHT');
-                    selected_date = moment(selected_date).add(1, "day");
+                    if (settings.debug) { console.log('RIGHT'); }
+                    if (settings.isRTL) {
+                        selected_date = moment(selected_date).subtract(1, "day");
+                    } else {
+                        selected_date = moment(selected_date).add(1, "day");
+                    }
+                    updateView();
                     break;
                 case 38: // up
-                    console.log('UP');
+                    if (settings.debug) { console.log('UP'); }
                     selected_date = moment(selected_date).subtract(1, "week");
+                    updateView();
                     break;
                 case 40: // down
-                    console.log('DOWN');
+                    if (settings.debug) { console.log('DOWN'); }
                     selected_date = moment(selected_date).add(1, "week");
+                    updateView();
                     break;
-                case 13: // enter
+                case 9: // tab
+                    if (settings.debug) { console.log('TAB'); }
+                    console.log('TAB');
+                    break;
+                /*case 13: // enter
                     console.log('ENTER - accept selected date as current date');
                     selectDate(selected_date);
+                    updateView();
                     break;
+                    */
                 case 27: // escape
-                    console.log('ESCAPE - hide picker if necessary');
+                    if (settings.debug) {
+                        console.log('ESCAPE - hide picker if necessary');
+                    }
+                    hideContainer();
+                    $input_element.focus();
                     break;
                 default:
                     break;
             }
 
-            updateView();
         }
 
         function handleInputElementPointerUp(ev) {
@@ -392,7 +443,28 @@
         }
 
         function handleInputElementChange(ev) {
-            setCurrentDate(parseDate($input_element.val()));
+            selectDate(parseDate($input_element.val()));
+            updateView();
+        }
+
+        function toggleContainer() {
+            is_visible = !is_visible;
+            if (is_visible) {
+                showContainer();
+            } else {
+                hideContainer();
+            }
+        }
+        function showContainer() {
+            draw();
+            bindContainerEventHandlers();
+            $container_element.show();
+            updateView();
+        }
+
+        function hideContainer() {
+            unbindContainerEventHandlers();
+            $container_element.hide();
         }
 
         function updateView() {
@@ -428,6 +500,8 @@
         }
 
         function selectDate(date) {
+            selected_date = moment(date);
+
             var adjusted_date = moment(date);
             adjusted_date.milliseconds(current_date.milliseconds());
             adjusted_date.seconds(current_date.seconds());
@@ -741,10 +815,6 @@
             return false;
         }
 
-        function removeEventHandlers() {
-            console.log('hello from removeEventHandlers');
-        }
-
         function updateSettings(s) {
             settings = $.extend(true, {}, default_settings, s, settings);
 
@@ -791,7 +861,11 @@
             settings.inputFormats.push(settings.displayFormat);
 
             settings.disableWeekends = !!settings.disableWeekends;
-            settings.isRTL = !!settings.isRTL;
+
+            if (!_.isString(settings.direction) || (_.isString(settings.direction) && ['rtl', 'ltr'].indexOf(settings.direction) === -1)) {
+                throw new Error('Setting direction must be "ltr" or "rtl". To render correctly try to set the "dir" attribute on the HTML element and provide it as the direction setting value.');
+            }
+            settings.isRTL = settings.direction === 'rtl' ? true : false;
 
             var nom = settings.numberOfMonths;
             if (_.isNumber(nom) && !_.isNaN(nom)) {
