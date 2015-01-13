@@ -38,7 +38,6 @@ body {
   background-color: white; }
   .calendar .calendar__header {
     padding: 1em;
-    padding-top: 0;
     text-align: center; }
   .calendar .weekday,
   .calendar .calendar-week {
@@ -95,8 +94,6 @@ body {
       margin-top: 1em; }
       .calendar:first-child {
         margin-top: 0; }
-      .calendar .calendar__header {
-        padding-top: 1em; }
       .calendar .calendar-week {
         text-align: left; }
         .calendar .calendar-week.is-empty {
@@ -138,8 +135,6 @@ body {
     margin-top: 1em; }
     .calendar .calendar--list:first-child {
       margin-top: 0; }
-    .calendar .calendar--list .calendar__header {
-      padding-top: 1em; }
     .calendar .calendar--list .calendar-week {
       text-align: left; }
       .calendar .calendar--list .calendar-week.is-empty {
