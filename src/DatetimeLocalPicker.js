@@ -233,6 +233,7 @@
         $hidden_element.attr('id', $hidden_element.attr('id') + settings.logPrefix);
         $hidden_element.attr('type', 'search');
         $hidden_element.insertBefore($input_element);
+        $hidden_element.hide();
         $input_element.removeAttr('name');
 
         bindEventHandlers();
@@ -325,13 +326,13 @@
 
             $trigger_element.on('click.' + settings.logPrefix, function(ev) {
                 draw();
-            });
-
-            $hidden_element.on('change.' + settings.logPrefix, function(ev) {
-                console.log('hidden value: ' + $hidden_element.val());
+                updateView();
             });
 
             $input_element.on('change.' + settings.logPrefix, handleInputElementChange);
+            $hidden_element.on('change.' + settings.logPrefix, function(ev) {
+                console.log('hidden value: ' + $hidden_element.val());
+            });
 
             $input_element.on(
                 'pointerup.' + settings.logPrefix + ' ' +
@@ -339,58 +340,37 @@
                 handleInputElementPointerUp
             );
 
-            $input_element.on(
-                'keydown.' + settings.logPrefix,
-                handleInputElementKeydown
-            );
-
-/*
-            $container_element.on(
-                'keydown.' + settings.logPrefix + ' ' +
-                'click.' + settings.logPrefix,
-                //'button',
-                handleInputElementKeydown
-            );
-
-            $container_element.on(
-                'pointerup.' + settings.logPrefix + ' ' +
-                'click.' + settings.logPrefix,
-                function(ev) {
-                    $container_element.find('.'+settings.cssClasses.isSelected+' button').focus();
-                }
-            );
-*/
+            $container_element.on('keydown.' + settings.logPrefix, 'button', handleKeydown);
+            $container_element.on('click.' + settings.logPrefix, 'button', handleClick);
         }
 
-        function handleInputElementKeydown(ev) {
+        function handleClick(ev) {
+            var day = $(ev.target).parent('[data-iso-date]');
+            selectDate(parseDate(day.attr('data-iso-date')));
+            updateView();
+        }
+
+        function handleKeydown(ev) {
             switch (ev.keyCode) {
                 case 37: // left
                     console.log('LEFT');
-                    $("[data-iso-date='"+selected_date.toISOString()+"']").removeClass(settings.cssClasses.isSelected);
                     selected_date = moment(selected_date).subtract(1, "day");
-                    $("[data-iso-date='"+selected_date.toISOString()+"']").addClass(settings.cssClasses.isSelected);
                     break;
                 case 39: // right
                     console.log('RIGHT');
-                    $("[data-iso-date='"+selected_date.toISOString()+"']").removeClass(settings.cssClasses.isSelected);
                     selected_date = moment(selected_date).add(1, "day");
-                    $("[data-iso-date='"+selected_date.toISOString()+"']").addClass(settings.cssClasses.isSelected);
                     break;
                 case 38: // up
                     console.log('UP');
-                    $("[data-iso-date='"+selected_date.toISOString()+"']").removeClass(settings.cssClasses.isSelected);
                     selected_date = moment(selected_date).subtract(1, "week");
-                    $("[data-iso-date='"+selected_date.toISOString()+"']").addClass(settings.cssClasses.isSelected);
                     break;
                 case 40: // down
                     console.log('DOWN');
-                    $("[data-iso-date='"+selected_date.toISOString()+"']").removeClass(settings.cssClasses.isSelected);
                     selected_date = moment(selected_date).add(1, "week");
-                    $("[data-iso-date='"+selected_date.toISOString()+"']").addClass(settings.cssClasses.isSelected);
                     break;
                 case 13: // enter
                     console.log('ENTER - accept selected date as current date');
-                    setCurrentDate(moment(selected_date));
+                    selectDate(selected_date);
                     break;
                 case 27: // escape
                     console.log('ESCAPE - hide picker if necessary');
@@ -398,7 +378,8 @@
                 default:
                     break;
             }
-            console.log(current_date.toISOString(), selected_date.toISOString());
+
+            updateView();
         }
 
         function handleInputElementPointerUp(ev) {
@@ -414,6 +395,47 @@
             setCurrentDate(parseDate($input_element.val()));
         }
 
+        function updateView() {
+            highlightToday();
+            highlightCurrentDate();
+            focusSelectedDate();
+        }
+
+        function highlightToday() {
+            var date = moment().startOf('day').toISOString();
+            $container_element.find('.'+settings.cssClasses.isToday).removeClass(settings.cssClasses.isToday);
+            $container_element.find("[data-iso-date='"+date+"']").addClass(settings.cssClasses.isToday);
+        }
+
+        function highlightCurrentDate() {
+            var date = moment(current_date).startOf('day').toISOString();
+            $container_element.find('.'+settings.cssClasses.isCurrent).removeClass(settings.cssClasses.isCurrent);
+            $container_element.find("[data-iso-date='"+date+"']").addClass(settings.cssClasses.isCurrent);
+        }
+
+        function blurSelectedDate() {
+            $container_element.find('.'+settings.cssClasses.isSelected).removeClass(settings.cssClasses.isSelected);
+        }
+
+        function focusSelectedDate() {
+            blurSelectedDate();
+            if (settings.debug) {
+                console.log('selected='+selected_date.toISOString());
+            }
+            var date = moment(selected_date).startOf('day').toISOString();
+            $container_element.find("[data-iso-date='"+date+"']").addClass(settings.cssClasses.isSelected)
+                .find('button').focus();
+        }
+
+        function selectDate(date) {
+            var adjusted_date = moment(date);
+            adjusted_date.milliseconds(current_date.milliseconds());
+            adjusted_date.seconds(current_date.seconds());
+            adjusted_date.minutes(current_date.minutes());
+            adjusted_date.hours(current_date.hours());
+            setCurrentDate(adjusted_date);
+        }
+
         function setCurrentDate(date) {
             if (moment.isMoment(date) && date.isValid()) {
                 current_date = moment(date);
@@ -422,8 +444,6 @@
             } else {
                 resetInputElementDate();
             }
-
-            draw();
         }
 
         function isWeekend(valid_moment) {
@@ -572,10 +592,10 @@
         }
 
         function prepareCalendarWeeks(date) {
+            date = moment(date);
             var weeks = [];
             var days_per_week = 7;
             var today = moment();
-            var current_date = moment(date);
             var days_in_month = getDaysInMonth(date);
             var first_date_of_month = moment(date).startOf('month');
             var first_week_of_month = first_date_of_month.week();
@@ -651,17 +671,18 @@
                 if (!isWeekend(render_date) && isDisabled(render_date)) {
                     day_css += ' ' + settings.cssClasses.isDisabled;
                     day_valid = false;
-                    /*day_content = settings.template.disabledDay({
-                        date: render_date,
-                        settings: settings
-                    });*/
                 }
+                /*
                 if (today.isSame(render_date, 'day')) {
                     day_css += ' ' + settings.cssClasses.isToday;
-                }
+                }*/
+                /*
                 if (render_date.isSame(selected_date, 'day')) {
                     day_css += ' ' + settings.cssClasses.isSelected;
                 }
+                if (render_date.isSame(current_date, 'day')) {
+                    day_css += ' ' + settings.cssClasses.isCurrent;
+                }*/
 
                 // data for one calendar day
                 day_data = {

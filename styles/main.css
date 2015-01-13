@@ -45,25 +45,33 @@ body {
   .calendar .calendar-week {
     padding: 1em;
     text-align: right; }
-  .calendar .day:not(.day--excess):hover {
+  .calendar .day {
+    padding: 0;
+    margin: 0; }
+  .calendar .day:not(.day--excess) button:hover {
     background-color: #ccc; }
-  .calendar .weekday,
-  .calendar .calendar-week,
-  .calendar .day--excess {
+  .calendar .weekday button,
+  .calendar .calendar-week button,
+  .calendar .day--excess button {
     color: #bbb; }
-  .calendar .weekend {
+  .calendar .weekend button {
     background-color: #eee; }
-  .calendar .day--today {
+  .calendar .day button {
+    width: 100%;
+    height: 100%;
+    border: 1px solid transparent;
+    background: transparent; }
+  .calendar .day--today button {
     background-color: #77f;
     color: blue; }
-  .calendar .day--current {
-    background-color: #7f7;
-    color: #000;
-    outline: 1px solid #0f0; }
-  .calendar .day--selected {
+  .calendar .day--selected button {
     background-color: #ccc;
     color: #000;
-    outline: 1px solid #000; }
+    border: 1px solid #000; }
+  .calendar .day--current button {
+    background-color: #7e7;
+    color: #000;
+    border: 1px solid #0f0; }
   @media screen and (max-width: 767px) {
     .calendar div {
       display: block; }
