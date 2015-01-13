@@ -374,7 +374,7 @@
         }
 
         function handleClick(ev) {
-            var day = $(ev.target).parent('[data-iso-date]');
+            var day = $(ev.target).parents('[data-iso-date]');
             selectDate(parseDate(day.attr('data-iso-date')));
             updateView();
         }
@@ -495,8 +495,9 @@
                 console.log('selected='+selected_date.toISOString());
             }
             var date = moment(selected_date).startOf('day').toISOString();
-            $container_element.find("[data-iso-date='"+date+"']").addClass(settings.cssClasses.isSelected)
-                .find('button').focus();
+            $container_element.find("[data-iso-date='"+date+"']").addClass(settings.cssClasses.isSelected);
+            // TODO must be the button in the calendar view that was actually triggered
+            $container_element.find("[data-iso-date='"+date+"']").first().find('button').focus();
         }
 
         function selectDate(date) {
