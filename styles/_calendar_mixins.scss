@@ -31,12 +31,22 @@
 }
 
 @mixin calendar-list-layout {
+    margin-top: 1em;
+
+    &:first-child {
+        margin-top: 0;
+    }
+
     .calendar__header {
         padding-top: 1em;
     }
 
     .calendar-week {
         text-align: left;
+
+        &.is-empty {
+            display: none;
+        }
     }
 
     .weeks,
