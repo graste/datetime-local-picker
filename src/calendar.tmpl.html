@@ -1,4 +1,4 @@
-<div class="calendar <% if (state.current_date.month()%2===0) { %>calendar--equal-month<% } %>">
+<div class="calendar <% if (currentDate.month()%2===0) { %>calendar--equal-month<% } %>">
     <div class="calendar__header">
         <div class="month">
             <button class="prev_month">&lt;</button><!--
@@ -28,7 +28,7 @@
                     <span class="long"><%- week.content.long %></span>
                 </div>
                 <% _.forEach(week.days, function(day) { %>
-                <div class="<%- day.css %>" data-iso-date="<%- day.isoDate %>">
+                <div class="<%- day.css %>" data-ymd="<%- day.ymd %>" data-iso-date="<%- day.isoDate %>">
                     <button type="button">
                         <span class="min"><%- day.date.date() %></span>
                         <span class="short"><%- day.date.format("L") %></span>

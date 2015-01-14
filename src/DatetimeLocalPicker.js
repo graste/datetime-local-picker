@@ -26,6 +26,8 @@
         locale: 'en',
         direction: 'rtl',
         parseStrict: true,
+        setTodayIfInvalid: false,
+        hideOnSelect: false,
 
         // must be given per locale as moment doesn't include this
         // see https://github.com/moment/moment/issues/1947
@@ -79,9 +81,9 @@
             maxDate: null, // must be new Date(…) or a string compatible to inputFormats
             // alternative:
             minMonth: 0,
-            minYear: 2015,
+            minYear: 1800,
             maxMonth: 11,
-            maxYear: 2030,
+            maxYear: 2100,
         },
 
         disableWeekends: false,
@@ -117,6 +119,7 @@
             isCurrent: 'day--current',
             isToday: 'day--today',
             isEmpty: 'is-empty',
+            inputInvalid: 'is-invalid',
 
             container: 'wrapper',
             calendar: 'calendar',
@@ -233,71 +236,54 @@
         return key === 'ctrl' || key === 'meta' || key === 'alt' || key === 'shift';
     }
 
-    function getDaysInMonth(moment_or_year, month) {
-        if (moment.isMoment(moment_or_year)) {
-            return moment_or_year.daysInMonth();
-        }
-        return moment(''+(+moment_or_year)+'-'+(+month), 'YYYY-MM').daysInMonth();
-    }
-
     // constructor function for DatetimeLocalPicker instances
     return function(instance_settings) {
         // define some internal state
         var state = {
-            current_date: null,
-            selected_date: null,
-            is_visible: false
+            currentDate: null,
+            selectedDate: null,
+            isVisible: false
         };
+
         var settings = {};
         updateSettings(instance_settings || {});
 
-        var $trigger_element = $(settings.triggerElement);
-        var $input_element = $(settings.inputElement);
+        // TODO validate given HTML elements or selector strings
 
-        var $container_element = settings.containerElement ? $(settings.containerElement) : null;
-        if (_.isNull($container_element)) {
-            $container_element = $('<div>').attr('id', 'container'+settings.logPrefix);
-            $container_element.insertAfter($input_element);
+        var $elements = {
+            trigger: null,
+            container: null,
+            input: null,
+            output: null
+        };
+        updateElements();
+
+        var initial_value = $elements.input.val();
+        var initial_moment = parseDate(initial_value);
+        if (!isValidDate(initial_moment) && settings.setTodayIfInvalid) {
+            initial_moment = moment();
+            moment.locale(settings.locale);
         }
+        setDate(initial_moment);
 
-        var $hidden_element = $input_element.clone();
-        $hidden_element.attr('id', $hidden_element.attr('id') + settings.logPrefix);
-        $hidden_element.attr('type', 'search');
-        $hidden_element.insertBefore($input_element);
-        $hidden_element.hide();
-        $input_element.removeAttr('name');
-
-        bindEventHandlers();
-
-        var initial_value = $input_element.val();
-        var initial_date = parseDate(initial_value);
-        if (moment.isMoment(initial_date) && initial_date.isValid()) {
-            state.current_date = moment(initial_date);
-        } else {
-            // TODO set default date to today? yes for the moment…
-            state.current_date = moment();
-            state.current_date.locale(settings.locale);
-        }
-        state.selected_date = moment(state.current_date).startOf('day');
-        setCurrentDate(state.current_date);
-
-        if (settings.debug) {
-            console.log('settings', settings);
-        }
+        if (settings.debug) { console.log('settings', settings); }
 
         // return public api
         return {
             getInputElement: function() {
-                return $input_element;
+                return $elements.input;
             },
-            getHiddenElement: function() {
-                return $hidden_element;
+            getOutputElement: function() {
+                return $elements.output;
             },
             getTriggerElement: function() {
-                return $trigger_element;
+                return $elements.trigger;
             },
             getContainerElement: function() {
-                return $container_element;
+                return $elements.container;
+            },
+            getCurrentDate: function() {
+                return moment(getCurrentDate());
             },
             getMinDate: function() {
                 return moment(settings.constraints.minDate);
@@ -305,23 +291,47 @@
             getMaxDate: function() {
                 return moment(settings.constraints.maxDate);
             },
+            getSelectedDate: function() {
+                return moment(getSelectedDate());
+            },
             getSettings: function() {
                 return _.cloneDeep(settings, cloneSpecialValues);
             },
-            getCurrentDate: function() {
-                return moment(state.current_date);
-            },
-            getSelectedDate: function() {
-                return moment(state.selected_date);
+            isValidDate: function(mixed) {
+                return isValidDate(parseDate(mixed));
             },
             isVisible: function() {
-                return state.is_visible;
+                return state.isVisible;
             },
             isWeekend: function(valid_moment) {
                 return isWeekend(valid_moment);
             },
-            parseDate: function(mixed) {
-                return parseDate(mixed);
+            parseDate: function(mixed, input_formats, locale) {
+                return parseDate(mixed, input_formats, locale);
+            },
+            selectDate: function(mixed) {
+                if (selectDate(mixed)) {
+                    updateViewOrRedraw();
+                }
+                return this;
+            },
+            selectDay: function(mixed) {
+                if (selectDay(mixed)) {
+                    updateViewOrRedraw();
+                }
+                return this;
+            },
+            setDate: function(mixed) {
+                if (setDate(mixed)) {
+                    updateViewOrRedraw();
+                }
+                return this;
+            },
+            setDay: function(mixed) {
+                if (setDay(mixed)) {
+                    updateViewOrRedraw();
+                }
+                return this;
             },
             setNumberOfMonths: function(nom) {
                 updateNumberOfMonths(nom);
@@ -350,6 +360,12 @@
             redraw: function() {
                 redraw();
                 return this;
+            },
+            toLocaleString: function() {
+                return getCurrentDate().toString();
+            },
+            toString: function() {
+                return getCurrentDate().toISOString();
             }
         };
 
@@ -360,63 +376,72 @@
          * for ASP.net style strings as those won't work because of strict
          * "settings.inputFormats" based parsing in the settings' locale..
          *
-         * @param mixed string or anything moment accepts to create a valid moment instance
+         * @param {mixed} mixed string or anything moment accepts to create a valid moment instance
+         * @param {string|array} input formats to use for strict parsing; defaults to settings.inputFormats
+         * @param {string} locale locale to use instead of settings.locale
          *
-         * @return moment instance set to locale from settings
+         * @return {moment} instance
          */
-        function parseDate(mixed) {
+        function parseDate(mixed, input_formats, locale) {
             var d;
+
             if (_.isString(mixed)) {
-                d = moment(mixed, settings.inputFormats, settings.locale, settings.parseStrict);
+                d = moment(mixed, input_formats || settings.inputFormats, settings.parseStrict);
             } else {
                 d = moment(mixed);
             }
-            d.locale(settings.locale);
-            return d;
-        }
+            d.locale(locale || settings.locale);
 
-        function redraw() {
-            if (state.is_visible) {
-                showContainer();
-            } else {
-                hideContainer();
-            }
+            return d;
         }
 
         function bindEventHandlers() {
             //var pointerevents = ['pointerdown', 'pointerup', 'pointermove', 'pointerover', 'pointerout', 'pointerenter', 'pointerleave', 'click'].join(' ');
 
-            $input_element.on('change.' + settings.logPrefix, handleInputElementChange);
-            $input_element.on(
+            $elements.input.on('change.' + settings.logPrefix, handleInputElementChange);
+            $elements.input.on('keydown.' + settings.logPrefix, handleInputElementKeydown);
+            $elements.input.on(
                 'pointerup.' + settings.logPrefix + ' ' +
                 'keyup.' + settings.logPrefix + ' ',
                 handleInputElementPointerUp
             );
 
-            $hidden_element.on('change.' + settings.logPrefix, function(ev) {
-                console.log('hidden value: ' + $hidden_element.val());
+            $elements.output.on('change.' + settings.logPrefix, function(ev) {
+                // TODO prevent invalid dates here? store last output date for restore?
+                if (settings.debug) { console.log('output element value: ' + $elements.output_element.val()); }
             });
 
-            $trigger_element.on('click.' + settings.logPrefix, function(ev) {
+            $elements.trigger.on('click.' + settings.logPrefix, function(ev) {
                 toggleContainer();
+                focusSelectedDate();
             });
         }
 
         function unbindEventHandlers() {
-            $trigger_element.off('.' + settings.logPrefix);
-            $hidden_element.off('.' + settings.logPrefix);
-            $input_element.off('.' + settings.logPrefix);
+            if (!_.isNull($elements.trigger)) {
+                $elements.trigger.off('.' + settings.logPrefix);
+            }
+
+            if (!_.isNull($elements.output)) {
+                $elements.output.off('.' + settings.logPrefix);
+            }
+
+            if (!_.isNull($elements.input)) {
+                $elements.input.off('.' + settings.logPrefix);
+            }
 
             unbindContainerEventHandlers();
         }
 
         function bindContainerEventHandlers() {
-            $container_element.on('keydown.' + settings.logPrefix, 'button', handleKeydown);
-            $container_element.on('click.' + settings.logPrefix, 'button', handleClick);
+            $elements.container.on('keydown.' + settings.logPrefix, 'button', handleContainerKeydown);
+            $elements.container.on('click.' + settings.logPrefix, 'button', handleContainerClick);
         }
 
         function unbindContainerEventHandlers() {
-            $container_element.off('.'+settings.logPrefix);
+            if (!_.isNull($elements.container)) {
+                $elements.container.off('.'+settings.logPrefix);
+            }
         }
 
         function rebindContainerEventHandlers() {
@@ -424,78 +449,71 @@
             bindContainerEventHandlers();
         }
 
-        function handleClick(ev) {
+        function handleContainerClick(ev) {
+            if (settings.debug) { console.log('handleContainerClick', ev); }
             var $target = $(ev.target);
-
             if ($target.parents(".calendar__header").length > 0) {
                 //click event came from some button in the calendar header
                 if ($target.hasClass("prev_month")) {
-                    state.current_date.subtract(1, "month");
+                    gotoPreviousSelectableDate('month');
                 } else if ($target.hasClass("next_month")) {
-                    state.current_date.add(1, "month");
+                    gotoNextSelectableDate('month');
                 } else if ($target.hasClass("prev_year")) {
-                    state.current_date.subtract(1, "year");
+                    gotoPreviousSelectableDate('year');
                 } else if ($target.hasClass("next_year")) {
-                    state.current_date.add(1, "year");
+                    gotoNextSelectableDate('year');
                 }
-
-                state.selected_date = state.current_date;
-
-                redraw();
+                updateViewOrRedraw();
             } else {
                 var day = $target.parents('[data-iso-date]');
-                var date = parseDate(day.attr('data-iso-date'));
-                if (!isDisabled(date)) {
-                    selectDate(date);
+                var parsed_date = parseDate(day.attr('data-iso-date'));
+                if (setDay(parsed_date)) {
+                    if (settings.hideOnSelect) {
+                        hideContainer();
+                        $elements.input.focus();
+                    } else {
+                        updateViewOrRedraw();
+                    }
                 }
-                updateView();
             }
         }
 
-        function handleKeydown(ev) {
+        function handleContainerKeydown(ev) {
+            if (settings.debug) { console.log('handleContainerKeydown', ev); }
             var next;
             switch (ev.keyCode) {
                 case 37: // left
                     if (settings.debug) { console.log('LEFT'); }
                     ev.preventDefault(); // prevent viewport scrolling
                     if (gotoPreviousSelectableDate('day')) {
-                        updateView();
+                        updateViewOrRedraw();
                     }
                     break;
                 case 39: // right
                     if (settings.debug) { console.log('RIGHT'); }
                     ev.preventDefault(); // prevent viewport scrolling
                     if (gotoNextSelectableDate('day')) {
-                        updateView();
+                        updateViewOrRedraw();
                     }
                     break;
                 case 38: // up
                     if (settings.debug) { console.log('UP'); }
                     ev.preventDefault(); // prevent viewport scrolling
                     if (gotoPreviousSelectableDate('week')) {
-                        updateView();
+                        updateViewOrRedraw();
                     }
                     break;
                 case 40: // down
                     if (settings.debug) { console.log('DOWN'); }
                     ev.preventDefault(); // prevent viewport scrolling
                     if (gotoNextSelectableDate('week')) {
-                        updateView();
+                        updateViewOrRedraw();
                     }
                     break;
-                case 9: // tab
-                    if (settings.debug) { console.log('TAB'); }
-                    break;
-                /*case 13: // enter
-                    console.log('ENTER - accept selected date as current date');
-                    break;
-                    */
                 case 27: // escape
-                    if (settings.debug) {
-                        console.log('ESCAPE - hide picker if necessary');
-                    }
+                    if (settings.debug) { console.log('ESCAPE'); }
                     hideContainer();
-                    $input_element.focus();
+                    $elements.input.focus();
                     break;
                 default:
                     break;
@@ -503,23 +521,62 @@
         }
 
         function handleInputElementPointerUp(ev) {
-            var date = parseDate($input_element.val());
-            if (moment.isMoment(date) && date.isValid()) {
-                $input_element.removeClass('is-invalid');
+            var parsed_date = parseDate($elements.input.val());
+            if (isValidDate(parsed_date)) {
+                $elements.input.removeClass(settings.cssClasses.inputInvalid);
             } else {
-                $input_element.addClass('is-invalid');
+                $elements.input.addClass(settings.cssClasses.inputInvalid);
+            }
+        }
+
+        function handleInputElementKeydown(ev) {
+            if (ev.keyCode === 13) { // enter
+                if (settings.debug) { console.log('RETURN'); }
+                ev.preventDefault(); // otherwise the focusSelectedDate() would close the dialog again ;-)
+                toggleContainer();
+                focusSelectedDate();
+            } else if (ev.keyCode === 27 && state.isVisible) {
+                if (settings.debug) { console.log('ESCAPE'); }
+                toggleContainer();
             }
         }
 
         function handleInputElementChange(ev) {
-            selectDate(parseDate($input_element.val()));
-            updateView();
+            var parsed_date = parseDate($elements.input.val());
+            if (!setDate(parsed_date)) {
+                resetInputElementDate(getCurrentDate());
+            }
+            updateViewOrRedraw();
+        }
+
+        function updateViewOrRedraw() {
+            if ($elements.container.find("[data-ymd='"+getSelectedDate().format('YYYYMMDD')+"']").length < 1) {
+                redraw();
+            } else {
+                updateView();
+            }
+        }
+
+        function redraw() {
+            if (state.isVisible) {
+                showContainer();
+            } else {
+                hideContainer();
+            }
+        }
+
+        function updateView() {
+            highlightToday();
+            highlightCurrentDate();
+            focusSelectedDate();
+            highlightInputElement();
         }
 
         function gotoPreviousSelectableDate(period) {
-            var prev = moment(state.selected_date);
+            var prev = moment(getSelectedDate());
             period = period || 'day';
             do {
+                // TODO this should jump of disabled week ends etc by decreasing the unit etc.
                 if (settings.isRTL && period === 'day') {
                     prev.add(1, period);
                 } else {
@@ -527,18 +584,18 @@
                 }
             } while (isDisabled(prev) && prev.isAfter(settings.constraints.minDate));
 
-            if (!isDisabled(prev)) {
-                state.selected_date = moment(prev);
-                return true;
+            if (isValidDate(prev)) {
+                return selectDay(prev);
             }
 
             return false;
         }
 
         function gotoNextSelectableDate(period) {
-            var next = moment(state.selected_date);
+            var next = moment(getSelectedDate());
             period = period || 'day';
             do {
+                // TODO this should jump of disabled week ends etc by increasing the unit etc.
                 if (settings.isRTL && period === 'day') {
                     next.subtract(1, period);
                 } else {
@@ -546,17 +603,16 @@
                 }
             } while (isDisabled(next) && next.isBefore(settings.constraints.maxDate));
 
-            if (!isDisabled(next)) {
-                state.selected_date = moment(next);
-                return true;
+            if (isValidDate(next)) {
+                return selectDay(next);
             }
 
             return false;
         }
 
         function toggleContainer() {
-            state.is_visible = !state.is_visible;
-            if (state.is_visible) {
+            state.isVisible = !state.isVisible;
+            if (state.isVisible) {
                 showContainer();
             } else {
                 hideContainer();
@@ -568,68 +624,119 @@
             draw();
             bindContainerEventHandlers();
             updateView();
-            $container_element.show();
-            state.is_visible = true;
+            $elements.container.show();
+            state.isVisible = true;
         }
 
         function hideContainer() {
             unbindContainerEventHandlers();
-            $container_element.hide();
-            state.is_visible = false;
+            $elements.container.hide();
+            state.isVisible = false;
         }
 
-        function updateView() {
-            highlightToday();
-            highlightCurrentDate();
-            focusSelectedDate();
+        function highlightInputElement() {
+            if (isValidDate(getCurrentDate())) {
+                $elements.input.removeClass(settings.cssClasses.inputInvalid);
+            } else {
+                $elements.input.addClass(settings.cssClasses.inputInvalid);
+            }
         }
 
         function highlightToday() {
-            var date = moment().startOf('day').toISOString();
-            $container_element.find('.'+settings.cssClasses.isToday).removeClass(settings.cssClasses.isToday);
-            $container_element.find("[data-iso-date='"+date+"']").addClass(settings.cssClasses.isToday);
+            var ymd = moment().format('YYYYMMDD');
+            $elements.container.find('.'+settings.cssClasses.isToday).removeClass(settings.cssClasses.isToday);
+            $elements.container.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isToday);
         }
 
         function highlightCurrentDate() {
-            var date = moment(state.current_date).startOf('day').toISOString();
-            $container_element.find('.'+settings.cssClasses.isCurrent).removeClass(settings.cssClasses.isCurrent);
-            $container_element.find("[data-iso-date='"+date+"']").addClass(settings.cssClasses.isCurrent);
+            var ymd = moment(getCurrentDate()).format('YYYYMMDD');
+            $elements.container.find('.'+settings.cssClasses.isCurrent).removeClass(settings.cssClasses.isCurrent);
+            $elements.container.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isCurrent);
         }
 
         function blurSelectedDate() {
-            $container_element.find('.'+settings.cssClasses.isSelected).removeClass(settings.cssClasses.isSelected);
+            $elements.container.find('.'+settings.cssClasses.isSelected).removeClass(settings.cssClasses.isSelected);
         }
 
         function focusSelectedDate() {
             blurSelectedDate();
-            if (settings.debug) {
-                console.log('selected='+state.selected_date.toISOString());
-            }
-            var date = moment(state.selected_date).startOf('day').toISOString();
-            $container_element.find("[data-iso-date='"+date+"']").addClass(settings.cssClasses.isSelected);
+            if (settings.debug) { console.log('selected='+getSelectedDate().toISOString()); }
+            var ymd = moment(getSelectedDate()).format('YYYYMMDD');
+            $elements.container.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isSelected);
             // TODO must be the button in the calendar view that was actually triggered
-            $container_element.find("[data-iso-date='"+date+"']").first().find('button').focus();
+            $elements.container.find("[data-ymd='"+ymd+"']").first().find('button').focus();
+        }
+
+        function setDay(date) {
+            var parsed_date = parseDate(date);
+            parsed_date.milliseconds(getCurrentDate().milliseconds());
+            parsed_date.seconds(getCurrentDate().seconds());
+            parsed_date.minutes(getCurrentDate().minutes());
+            parsed_date.hours(getCurrentDate().hours());
+            if (isValidDate(parsed_date)) {
+                setSelectedDate(parsed_date);
+                setCurrentDate(parsed_date);
+                return true;
+            }
+            return false;
+        }
+
+        function setDate(date) {
+            var parsed_date = parseDate(date);
+            if (isValidDate(parsed_date)) {
+                setSelectedDate(parsed_date);
+                setCurrentDate(parsed_date);
+            }
+            return false;
+        }
+
+        function selectDay(date) {
+            var parsed_date = parseDate(date).startOf('day');
+            parsed_date.milliseconds(getCurrentDate().milliseconds());
+            parsed_date.seconds(getCurrentDate().seconds());
+            parsed_date.minutes(getCurrentDate().minutes());
+            parsed_date.hours(getCurrentDate().hours());
+            return selectDate(parsed_date);
         }
 
         function selectDate(date) {
-            state.selected_date = moment(date);
+            var parsed_date = parseDate(date);
+            if (isValidDate(parsed_date)) {
+                setSelectedDate(parsed_date);
+                return true;
+            }
+            return false;
+        }
 
-            var adjusted_date = moment(date);
-            adjusted_date.milliseconds(state.current_date.milliseconds());
-            adjusted_date.seconds(state.current_date.seconds());
-            adjusted_date.minutes(state.current_date.minutes());
-            adjusted_date.hours(state.current_date.hours());
-            setCurrentDate(adjusted_date);
+        function setSelectedDate(date) {
+            if (isValidDate(date)) {
+                if (settings.debug) { console.log('selectedDate is now: '+date.toISOString()); }
+                state.selectedDate = moment(date);
+                return true;
+            }
+            return false;
         }
 
         function setCurrentDate(date) {
-            if (date && moment.isMoment(date) && date.isValid()) {
-                state.current_date = moment(date);
-                setHiddenElementDate(date);
+            if (isValidDate(date)) {
+                if (settings.debug) { console.log('currentDate is now: '+date.toISOString()); }
+                state.currentDate = moment(date);
+                setOutputElementDate(date);
                 setInputElementDate(date);
+                return true;
             } else {
-                resetInputElementDate();
+                if (settings.debug) { console.log('resetting from setCurrentDate as date is invalid: '+date.toISOString()); }
+                resetInputElementDate(getCurrentDate());
+                return false;
             }
+        }
+
+        function getSelectedDate() {
+            return state.selectedDate;
+        }
+
+        function getCurrentDate() {
+            return state.currentDate;
         }
 
         function isWeekend(valid_moment) {
@@ -637,30 +744,28 @@
             return (settings.weekendDays.indexOf(m.day()) !== -1);
         }
 
-        function setHiddenElementDate(valid_moment) {
-            $hidden_element.val(
+        function setOutputElementDate(valid_moment) {
+            $elements.output.val(
                 //moment(valid_moment).utc().format(settings.outputFormat)
                 moment(valid_moment).toISOString()
             );
         }
 
         function setInputElementDate(valid_moment) {
-            $input_element.val(
+            $elements.input.val(
                 moment(valid_moment).local().format(settings.displayFormat)
             );
         }
 
         // set input element value to the last known valid date
-        function resetInputElementDate() {
-            var m = parseDate($hidden_element.val());
-            if (moment.isMoment(m) && m.isValid()) {
-                $input_element.val(
-                    m.local().format(settings.displayFormat)
-                );
-                $input_element.removeClass('is-invalid');
+        function resetInputElementDate(date) {
+            var parsed_date = parseDate(date || $elements.output.val());
+            if (isValidDate(parsed_date)) {
+                $elements.input.val(parsed_date.format(settings.displayFormat));
+                $elements.input.removeClass(settings.cssClasses.inputInvalid);
             } else {
-                $input_element.addClass('is-invalid');
-                throw new Error('Hidden input element contains an invalid moment: ' + m);
+                $elements.input.addClass(settings.cssClasses.inputInvalid);
+                throw new Error('Output element contains an invalid moment: ' + m);
             }
         }
 
@@ -668,24 +773,26 @@
             var html = '';
             var idx;
 
+            var date = getSelectedDate() || getCurrentDate();
+
             // render N previous months
             for (idx = settings.numberOfMonths.before; idx > 0; idx--) {
                 html += renderCalendarMonth(
-                    moment(state.current_date).subtract(idx, 'months')
+                    moment(date).subtract(idx, 'months')
                 );
             }
 
             // render current month
-            html += renderCalendarMonth(moment(state.current_date));
+            html += renderCalendarMonth(date);
 
             // render N next months
             for (idx = 1; idx <= settings.numberOfMonths.after; idx++) {
                 html += renderCalendarMonth(
-                    moment(state.current_date).add(idx, 'months')
+                    moment(date).add(idx, 'months')
                 );
             }
 
-            $container_element.html(html);
+            $elements.container.html(html);
         }
 
         function renderCalendarMonth(date) {
@@ -697,7 +804,8 @@
                 calendarWeeks: prepareCalendarWeeks(date),
                 localeData: date.localeData(),
                 settings: settings,
-                state: state,
+                currentDate: getCurrentDate(),
+                selectedDate: getSelectedDate(),
                 currentMonth: date
             });
         }
@@ -821,7 +929,7 @@
             var day_content;
             var day_data = {};
             var week_data = {};
-            var render_date = moment(start_date).startOf('day');
+            var render_date = moment(start_date);
             var idx;
 
             for (idx = 0; idx < num_days; idx++) {
@@ -862,10 +970,10 @@
                     day_css += ' ' + settings.cssClasses.isToday;
                 }*/
                 /*
-                if (render_date.isSame(state.selected_date, 'day')) {
+                if (render_date.isSame(getSelectedDate(), 'day')) {
                     day_css += ' ' + settings.cssClasses.isSelected;
                 }
-                if (render_date.isSame(state.current_date, 'day')) {
+                if (render_date.isSame(getCurrentDate(), 'day')) {
                     day_css += ' ' + settings.cssClasses.isCurrent;
                 }*/
 
@@ -874,6 +982,7 @@
                     css: day_css,
                     date: moment(render_date),
                     isoDate: render_date.toISOString(),
+                    ymd: moment(render_date).format('YYYYMMDD'),
                     dayValid: day_valid,
                     content: day_content
                 };
@@ -890,24 +999,30 @@
                 render_date.add(1, 'day');
             }
 
-            /* unneccessary when container element has html attribute dir="rtl" set
+            /* unneccessary when html or container element has attribute dir="rtl" set
             if (settings.isRTL) {
                 _.forEach(weeks, function(week_data, index, collection) {
                     week_data.days.reverse();
                 });
             }*/
 
-            if (settings.debug) {
-                console.log('weeks_data=', weeks);
-            }
+            if (settings.debug) { console.log('weeks_data=', weeks); }
 
             return weeks;
         }
 
-        function isDisabled(date) {
-            var c = settings.constraints;
+        function isValidDate(date) {
+            if (!date || !moment.isMoment(date) || (moment.isMoment(date) && !date.isValid())) {
+                return false;
+            }
+            return !isDisabled(date);
+        }
 
-            if (!date.isBetween(c.minDate, c.maxDate)) {
+        function isDisabled(date) {
+            var min_date = moment(settings.constraints.minDate).subtract(1, 'millisecond');
+            var max_date = moment(settings.constraints.maxDate).add(1, 'millisecond');
+
+            if (!date.isBetween(min_date, max_date)) {
                 return true;
             }
 
@@ -928,6 +1043,26 @@
             */
 
             return false;
+        }
+
+        function updateElements() {
+            $elements.trigger = $(settings.triggerElement);
+            $elements.input = $(settings.inputElement);
+
+            $elements.container = settings.containerElement ? $(settings.containerElement) : null;
+            if (_.isNull($elements.container)) {
+                $elements.container = $('<div>').attr('id', 'container'+settings.logPrefix);
+                $elements.container.insertAfter($elements.input);
+            }
+
+            $elements.output = $elements.input.clone();
+            $elements.output.attr('id', $elements.output.attr('id') + settings.logPrefix);
+            $elements.output.attr('type', 'search');
+            $elements.output.insertBefore($elements.input);
+            $elements.output.hide();
+            $elements.input.removeAttr('name');
+
+            bindEventHandlers();
         }
 
         function updateSettings(s) {
@@ -975,14 +1110,15 @@
             }
             settings.inputFormats.push(settings.displayFormat);
 
+            settings.setTodayIfInvalid = !!settings.setTodayIfInvalid;
+            settings.hideOnSelect = !!settings.hideOnSelect;
             settings.disableWeekends = !!settings.disableWeekends;
+            settings.debug = !!settings.debug;
 
             if (!_.isString(settings.direction) || (_.isString(settings.direction) && ['rtl', 'ltr'].indexOf(settings.direction) === -1)) {
                 throw new Error('Setting direction must be "ltr" or "rtl". To render correctly try to set the "dir" attribute on the HTML element and provide it as the direction setting value.');
             }
             settings.isRTL = settings.direction === 'rtl' ? true : false;
-
-            settings.debug = !!settings.debug;
 
             updateNumberOfMonths(settings.numberOfMonths);
             updateDateConstraints();
@@ -1045,18 +1181,12 @@
                 throw new Error('Setting constraints.minYear/maxYear/minMonth/maxMonth must be positive integer values.');
             }
 
-            if (min_date.isValid()) {
-                min_year = min_date.year();
-                min_month = min_date.month();
-            } else {
+            if (!min_date.isValid()) {
                 min_date = moment(min_year, 'YYYY', settings.locale, true);
                 min_date.startOf('year').month(min_month);
             }
 
-            if (max_date.isValid()) {
-                max_year = max_date.year();
-                max_month = max_date.month();
-            } else {
+            if (!max_date.isValid()) {
                 max_date = moment(max_year, 'YYYY', settings.locale, true);
                 max_date.endOf('year').month(max_month);
             }
@@ -1079,6 +1209,12 @@
             });
         }
 
+        function getDaysInMonth(moment_or_year, month) {
+            if (moment.isMoment(moment_or_year)) {
+                return moment_or_year.daysInMonth();
+            }
+            return moment(''+(+moment_or_year)+'-'+(+month), 'YYYY-MM').daysInMonth();
+        }
     }; // end of constructor function
 }));
 
