@@ -24,6 +24,11 @@
         text-align: right;
     }
 
+    .calendar-week {
+        font-size: 0.6em;
+        padding: 0.6em;
+    }
+
     .day:not(.day--disabled):hover {
         background-color: #ccc;
         button::after {

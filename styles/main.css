@@ -49,6 +49,9 @@ body {
   .calendar .calendar-week {
     padding: 1em;
     text-align: right; }
+  .calendar .calendar-week {
+    font-size: 0.6em;
+    padding: 0.6em; }
   .calendar .day:not(.day--disabled):hover {
     background-color: #ccc; }
     .calendar .day:not(.day--disabled):hover button::after {
