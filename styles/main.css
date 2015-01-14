@@ -39,12 +39,16 @@ body {
   .calendar .calendar__header {
     padding: 1em;
     text-align: center; }
-    .calendar .calendar__header div {
-      display: inline-block; }
+    .calendar .calendar__header .month, .calendar .calendar__header .year {
+      display: inline-block;
+      width: 50%; }
     .calendar .calendar__header button,
     .calendar .calendar__header span {
-      display: inline;
-      width: auto; }
+      display: inline-block; }
+    .calendar .calendar__header button {
+      width: 25%; }
+    .calendar .calendar__header span {
+      width: 50%; }
   .calendar .weekday,
   .calendar .calendar-week {
     padding: 1em;

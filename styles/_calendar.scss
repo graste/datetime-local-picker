@@ -7,14 +7,22 @@
         padding: 1em;
         text-align: center;
 
-        div {
+        .month, .year {
             display: inline-block;
+            width: 50%;
         }
 
         button,
         span {
-            display: inline;
-            width: auto;
+            display: inline-block;
+        }
+
+        button {
+            width: 25%;
+        }
+
+        span {
+            width: 50%;
         }
     }
 
