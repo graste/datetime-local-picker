@@ -110,6 +110,10 @@ body {
       .calendar .calendar-week {
         color: inherit;
         border-bottom: 3px solid #ccc; }
+        .calendar .calendar-week .min {
+          display: none; }
+        .calendar .calendar-week .long {
+          display: inline; }
       .calendar .day .min,
       .calendar .day .short {
         display: none; }
@@ -136,7 +140,13 @@ body {
       .calendar .day .long {
         display: none; }
       .calendar .day .min {
-        display: inline; } }
+        display: inline; }
+      .calendar .calendar-week {
+        border-bottom: none; }
+        .calendar .calendar-week .min {
+          display: inline; }
+        .calendar .calendar-week .long {
+          display: none; } }
   .calendar.calendar--list {
     margin-top: 1em; }
     .calendar.calendar--list:first-child {
@@ -157,6 +167,10 @@ body {
     .calendar.calendar--list .calendar-week {
       color: inherit;
       border-bottom: 3px solid #ccc; }
+      .calendar.calendar--list .calendar-week .min {
+        display: none; }
+      .calendar.calendar--list .calendar-week .long {
+        display: inline; }
     .calendar.calendar--list .day .min,
     .calendar.calendar--list .day .short {
       display: none; }
@@ -183,3 +197,9 @@ body {
       display: none; }
     .calendar.calendar--table .day .min {
       display: inline; }
+    .calendar.calendar--table .calendar-week {
+      border-bottom: none; }
+      .calendar.calendar--table .calendar-week .min {
+        display: inline; }
+      .calendar.calendar--table .calendar-week .long {
+        display: none; }

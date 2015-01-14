@@ -179,20 +179,42 @@
         htmlAttributes: {
         },
         i18n: {
-            prevMonth: '',
-            nextMonth: '',
+            de: {
+                prevMonth: '',
+                nextMonth: '',
 
-            months: [],
-            monthsShort: [],
+                months: [],
+                monthsShort: [],
 
-            weekdays: [],
-            weekdaysShort: [],
+                weekdays: [],
+                weekdaysShort: [],
 
-            midnight: '',
-            noon: '',
+                midnight: '',
+                noon: '',
 
-            clear: '',
-            today: '',
+                clear: '',
+                today: '',
+
+                week: 'Woche'
+            },
+            en: {
+                prevMonth: '',
+                nextMonth: '',
+
+                months: [],
+                monthsShort: [],
+
+                weekdays: [],
+                weekdaysShort: [],
+
+                midnight: '',
+                noon: '',
+
+                clear: '',
+                today: '',
+
+                week: 'Week'
+            }
         }
     };
 
@@ -791,7 +813,10 @@
                         css: settings.cssClasses.week,
                         weekNumberCSS: settings.cssClasses.weekNumber,
                         num: render_date.week(),
-                        content: render_date.format('WW'),
+                        content: {
+                            min: render_date.format('WW'),
+                            long: render_date.format('['+settings.i18n[settings.locale].week+'] W')
+                        },
                         days: []
                     };
                 }

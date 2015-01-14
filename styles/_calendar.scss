@@ -94,6 +94,14 @@
         .calendar-week {
             color: inherit;
             border-bottom: 3px solid #ccc;
+
+            .min {
+                display: none;
+            }
+
+            .long {
+                display: inline;
+            }
         }
 
         .day {
@@ -119,6 +127,18 @@
 
             .min {
                 display: inline;
+            }
+        }
+
+        .calendar-week {
+            border-bottom: none;
+
+            .min {
+                display: inline;
+            }
+
+            .long {
+                display: none;
             }
         }
     }
