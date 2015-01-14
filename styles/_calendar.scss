@@ -2,12 +2,14 @@
 
 .calendar {
     background-color: white;
+    color: #000;
 
     .calendar__header {
         padding: 1em;
         text-align: center;
 
-        .month, .year {
+        .month,
+        .year {
             display: inline-block;
             width: 50%;
         }

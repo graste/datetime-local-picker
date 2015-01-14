@@ -6,7 +6,7 @@
     <title>datetime-local-picker</title>
     <link rel="stylesheet" type="text/css" href="styles/main.css" />
 <style>
-body, label {
+/*body, label {
     color: white;
 }
 input {
@@ -17,7 +17,7 @@ input {
 }
 .dtp {
     color: black;
-}
+}*/
 </style>
 </head>
 <body>
@@ -29,7 +29,6 @@ input {
     <input type="text"
         name="publishDate"
         value="2015-01-15T12:42:23.789+00:00"
-        data-value-formatted="Donnerstag, 15. Januar 2015 12:42:23.789"
         class="dtp__output"
         id="publishDate"
     >
@@ -76,7 +75,7 @@ require([
         containerElement: '#publishDatePickerContainer',
         locale: $('html').attr('lang'),
         direction: $('html').attr('dir'),
-        hideOnSelect: true,
+        hideOnSelect: false,
         disableWeekends: false,
         //minWeeksPerMonth: 6,
         //numberOfMonths: -2,
@@ -89,7 +88,7 @@ require([
             maxDate: '2017-02-24T23:59:59.999'
         },*/
         templates: {
-            calendar: calendar_tmpl,
+            containerContent: calendar_tmpl,
             test: '<%- omg %>'
         },
         debug: false

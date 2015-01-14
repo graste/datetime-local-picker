@@ -4,15 +4,21 @@
 body {
   padding: 50px;
   background-color: #333;
+  color: #fff;
   font-family: Helvetica, Arial, sans-serif; }
   @media screen and (max-width: 767px) {
     body {
       padding: 0;
       margin: 0; } }
 
+.is-invalid {
+  border: 2px solid red;
+  background-color: #fcc; }
+
 .datepicker {
   position: relative;
-  background-color: white; }
+  background-color: #fff;
+  color: #000; }
   @media screen and (min-width: 768px) {
     .datepicker {
       display: inline-block;
@@ -35,11 +41,13 @@ body {
     margin-left: 1em; }
 
 .calendar {
-  background-color: white; }
+  background-color: white;
+  color: #000; }
   .calendar .calendar__header {
     padding: 1em;
     text-align: center; }
-    .calendar .calendar__header .month, .calendar .calendar__header .year {
+    .calendar .calendar__header .month,
+    .calendar .calendar__header .year {
       display: inline-block;
       width: 50%; }
     .calendar .calendar__header button,
@@ -216,3 +224,5 @@ body {
         display: inline; }
       .calendar.calendar--table .calendar-week .long {
         display: none; }
+
+/*# sourceMappingURL=main.css.map */

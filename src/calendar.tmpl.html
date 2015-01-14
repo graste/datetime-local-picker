@@ -1,45 +1,56 @@
-<div class="calendar <% if (currentDate.month()%2===0) { %>calendar--equal-month<% } %>">
-    <div class="calendar__header">
-        <div class="month">
-            <button class="prev_month">&lt;</button><!--
-            --><span class="month-title"><%- calendarHeader.month %></span><!--
-            --><button class="next_month">&gt;</button>
-        </div><!--
-        --><div class="year">
-            <button class="prev_year">&lt;</button><!--
-            --><span class="year-title"><%- calendarHeader.year %></span><!--
-            --><button class="next_year">&gt;</button>
-        </div>
+<div class="<%- settings.cssClasses.calendars %> <%- css %>" data-nom="<%- numberOfMonths %>">
+    <div class="<%- settings.cssClasses.calendarsHeader %>">
     </div>
-    <div class="calendar__body">
-        <div class="weekdays">
-            <div>
-                <div class="calendar-week <%- settings.cssClasses.isEmpty %>"><!-- --></div>
-                <% _.forEach(calendarWeekdays, function(weekday) { %>
-                <div class="<%- weekday.css %>"><%- weekday.content %></div>
-                <% }); %>
-            </div>
-        </div>
-        <div class="weeks">
-            <% _.forEach(calendarWeeks, function(week) { %>
-            <div class="<%- week.css %>">
-                <div class="<%- week.weekNumberCSS %>">
-                    <span class="min"><%- week.content.min %></span>
-                    <span class="long"><%- week.content.long %></span>
+    <div class="<%- settings.cssClasses.calendarsBody %>">
+        <% _.forEach(calendars, function(calendar) { %>
+        <div class="<%- settings.cssClasses.calendar %>">
+            <div class="<%- settings.cssClasses.calendarHeader %>">
+                <div class="month">
+                    <button class="<%- settings.cssClasses.gotoPrevMonth %>" title="<%- i18n.gotoPrevMonthTitle %>">&lt;</button><!--
+                    --><span class="month-title"><%- calendar.header.month %></span><!--
+                    --><button class="<%- settings.cssClasses.gotoNextMonth %>" title="<%- i18n.gotoNextMonthTitle %>">&gt;</button>
+                </div><!--
+                --><div class="year">
+                    <button class="<%- settings.cssClasses.gotoPrevYear %>" title="<%- i18n.gotoPrevYearTitle %>">&lt;</button><!--
+                    --><span class="year-title"><%- calendar.header.year %></span><!--
+                    --><button class="<%- settings.cssClasses.gotoNextYear %>" title="<%- i18n.gotoNextYearTitle %>">&gt;</button>
                 </div>
-                <% _.forEach(week.days, function(day) { %>
-                <div class="<%- day.css %>" data-ymd="<%- day.ymd %>" data-iso-date="<%- day.isoDate %>">
-                    <button type="button">
-                        <span class="min"><%- day.date.date() %></span>
-                        <span class="short"><%- day.date.format("L") %></span>
-                        <span class="long"><%- day.date.format("dddd LL") %></span>
-                    </button>
-                </div>
-                <% }); %>
             </div>
-            <% }); %>
+            <div class="<%- settings.cssClasses.calendarBody %>">
+                <div class="weekdays">
+                    <div>
+                        <div class="calendar-week <%- settings.cssClasses.isEmpty %>"><!-- --></div>
+                        <% _.forEach(calendar.weekdays, function(weekday) { %>
+                        <div class="<%- weekday.css %>"><abbr title="<%- weekday.fullName %>"><%- weekday.content %></abbr></div>
+                        <% }); %>
+                    </div>
+                </div>
+                <div class="weeks">
+                    <% _.forEach(calendar.weeks, function(week) { %>
+                    <div class="<%- week.css %>">
+                        <div class="<%- week.weekNumberCSS %>">
+                            <abbr class="min" title="<%- week.nameLongYear %>"><%- week.nameMin %></abbr>
+                            <abbr class="long" title="<%- week.nameLongYear %>"><%- week.nameLong %></abbr>
+                        </div>
+                        <% _.forEach(week.days, function(day) { %>
+                        <div class="<%- day.css %>" data-ymd="<%- day.ymd %>" data-iso-date="<%- day.isoDate %>">
+                            <button type="button" class="select-day" title="<%- day.date.format("dddd, LL") %>">
+                                <abbr class="min" title="<%- day.date.format("dddd, LL") %>"><%- day.date.date() %></abbr>
+                                <abbr class="short" title="<%- day.date.format("dddd, LL") %>"><%- day.date.format("L") %></abbr>
+                                <span class="long"><%- day.date.format("dddd, LL") %></span>
+                            </button>
+                        </div>
+                        <% }); %>
+                    </div>
+                    <% }); %>
+                </div>
+            </div>
+            <div class="<%- settings.cssClasses.calendarFooter %>"><%- calendar.footer.content %></div>
         </div>
+        <% }); %>
     </div>
-    <div class="calendar__footer"><%- calendarFooter.content %></div>
+    <div class="<%- settings.cssClasses.calendarsFooter %>">
+        <button type="button" class="<%- settings.cssClasses.selectToday %>"><%- i18n.selectToday %></button>
+        <span class="current-date"><% if (currentDate) print(currentDate.format("LLLL")) %></span>
+    </div>
 </div>
-

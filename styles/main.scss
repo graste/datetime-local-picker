@@ -5,12 +5,18 @@
 body {
     padding: 50px;
     background-color: #333;
+    color: #fff;
     font-family: Helvetica, Arial, sans-serif;
 
     @media screen and (max-width:767px) {
         padding: 0;
         margin: 0;
     }
+}
+
+.is-invalid {
+    border: 2px solid red;
+    background-color: #fcc;
 }
 
 @import "datepicker";
