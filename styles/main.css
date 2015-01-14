@@ -39,6 +39,12 @@ body {
   .calendar .calendar__header {
     padding: 1em;
     text-align: center; }
+    .calendar .calendar__header div {
+      display: inline-block; }
+    .calendar .calendar__header button,
+    .calendar .calendar__header span {
+      display: inline;
+      width: auto; }
   .calendar .weekday,
   .calendar .calendar-week {
     padding: 1em;

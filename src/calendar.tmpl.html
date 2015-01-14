@@ -1,6 +1,15 @@
 <div class="calendar <% if (state.current_date.month()%2===0) { %>calendar--equal-month<% } %>">
     <div class="calendar__header">
-        <span class="calendar-title"><%- calendarHeader.content %></span>
+        <div class="month">
+            <button class="prev_month">&lt;</button>
+            <span class="month-title"><%- calendarHeader.month %></span>
+            <button class="next_month">&gt;</button>
+        </div>
+        <div class="year">
+            <button class="prev_year">&lt;</button>
+            <span class="year-title"><%- calendarHeader.year %></span>
+            <button class="next_year">&gt;</button>
+        </div>
     </div>
     <div class="calendar__body">
         <div class="weekdays">

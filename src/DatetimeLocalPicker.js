@@ -425,12 +425,31 @@
         }
 
         function handleClick(ev) {
-            var day = $(ev.target).parents('[data-iso-date]');
-            var date = parseDate(day.attr('data-iso-date'));
-            if (!isDisabled(date)) {
-                selectDate(date);
+            var $target = $(ev.target);
+
+            if ($target.parents(".calendar__header").length > 0) {
+                //click event came from some button in the calendar header
+                if ($target.hasClass("prev_month")) {
+                    state.current_date.subtract(1, "month");
+                } else if ($target.hasClass("next_month")) {
+                    state.current_date.add(1, "month");
+                } else if ($target.hasClass("prev_year")) {
+                    state.current_date.subtract(1, "year");
+                } else if ($target.hasClass("next_year")) {
+                    state.current_date.add(1, "year");
+                }
+
+                state.selected_date = state.current_date;
+
+                redraw();
+            } else {
+                var day = $target.parents('[data-iso-date]');
+                var date = parseDate(day.attr('data-iso-date'));
+                if (!isDisabled(date)) {
+                    selectDate(date);
+                }
+                updateView();
             }
-            updateView();
         }
 
         function handleKeydown(ev) {
