@@ -220,10 +220,12 @@
 
     // constructor function for DatetimeLocalPicker instances
     return function(instance_settings) {
-        // define some global variables
-        var current_date;
-        var selected_date;
-        var is_visible = false;
+        // define some internal state
+        var state = {
+            current_date: null,
+            selected_date: null,
+            is_visible: false
+        };
         var settings = {};
         updateSettings(instance_settings || {});
 
@@ -248,14 +250,14 @@
         var initial_value = $input_element.val();
         var initial_date = parseDate(initial_value);
         if (moment.isMoment(initial_date) && initial_date.isValid()) {
-            current_date = moment(initial_date);
+            state.current_date = moment(initial_date);
         } else {
             // TODO set default date to today? yes for the moment…
-            current_date = moment();
-            current_date.locale(settings.locale);
+            state.current_date = moment();
+            state.current_date.locale(settings.locale);
         }
-        selected_date = moment(current_date).startOf('day');
-        setCurrentDate(current_date);
+        state.selected_date = moment(state.current_date).startOf('day');
+        setCurrentDate(state.current_date);
 
         if (settings.debug) {
             console.log('settings', settings);
@@ -285,13 +287,23 @@
                 return _.cloneDeep(settings, cloneSpecialValues);
             },
             getCurrentDate: function() {
-                return moment(current_date);
+                return moment(state.current_date);
             },
             getSelectedDate: function() {
-                return moment(selected_date);
+                return moment(state.selected_date);
+            },
+            isVisible: function() {
+                return state.is_visible;
             },
             isWeekend: function(valid_moment) {
                 return isWeekend(valid_moment);
+            },
+            parseDate: function(mixed) {
+                return parseDate(mixed);
+            },
+            setNumberOfMonths: function(nom) {
+                updateNumberOfMonths(nom);
+                return this;
             },
             unbind: function() {
                 unbindEventHandlers();
@@ -311,6 +323,10 @@
             },
             hide: function() {
                 hideContainer();
+                return this;
+            },
+            redraw: function() {
+                redraw();
                 return this;
             }
         };
@@ -335,6 +351,14 @@
             }
             d.locale(settings.locale);
             return d;
+        }
+
+        function redraw() {
+            if (state.is_visible) {
+                showContainer();
+            } else {
+                hideContainer();
+            }
         }
 
         function bindEventHandlers() {
@@ -371,6 +395,11 @@
 
         function unbindContainerEventHandlers() {
             $container_element.off('.'+settings.logPrefix);
+        }
+
+        function rebindContainerEventHandlers() {
+            unbindContainerEventHandlers();
+            bindContainerEventHandlers();
         }
 
         function handleClick(ev) {
@@ -447,7 +476,7 @@
         }
 
         function gotoPreviousSelectableDate(period) {
-            var prev = moment(selected_date);
+            var prev = moment(state.selected_date);
             period = period || 'day';
             do {
                 if (settings.isRTL && period === 'day') {
@@ -455,11 +484,10 @@
                 } else {
                     prev.subtract(1, period);
                 }
-                console.log(prev.toString());
             } while (isDisabled(prev) && prev.isAfter(settings.constraints.minDate));
 
             if (!isDisabled(prev)) {
-                selected_date = moment(prev);
+                state.selected_date = moment(prev);
                 return true;
             }
 
@@ -467,7 +495,7 @@
         }
 
         function gotoNextSelectableDate(period) {
-            var next = moment(selected_date);
+            var next = moment(state.selected_date);
             period = period || 'day';
             do {
                 if (settings.isRTL && period === 'day') {
@@ -478,7 +506,7 @@
             } while (isDisabled(next) && next.isBefore(settings.constraints.maxDate));
 
             if (!isDisabled(next)) {
-                selected_date = moment(next);
+                state.selected_date = moment(next);
                 return true;
             }
 
@@ -486,8 +514,8 @@
         }
 
         function toggleContainer() {
-            is_visible = !is_visible;
-            if (is_visible) {
+            state.is_visible = !state.is_visible;
+            if (state.is_visible) {
                 showContainer();
             } else {
                 hideContainer();
@@ -495,17 +523,18 @@
         }
 
         function showContainer() {
+            unbindContainerEventHandlers();
             draw();
             bindContainerEventHandlers();
             updateView();
             $container_element.show();
-            is_visible = true;
+            state.is_visible = true;
         }
 
         function hideContainer() {
             unbindContainerEventHandlers();
             $container_element.hide();
-            is_visible = false;
+            state.is_visible = false;
         }
 
         function updateView() {
@@ -521,7 +550,7 @@
         }
 
         function highlightCurrentDate() {
-            var date = moment(current_date).startOf('day').toISOString();
+            var date = moment(state.current_date).startOf('day').toISOString();
             $container_element.find('.'+settings.cssClasses.isCurrent).removeClass(settings.cssClasses.isCurrent);
             $container_element.find("[data-iso-date='"+date+"']").addClass(settings.cssClasses.isCurrent);
         }
@@ -533,28 +562,28 @@
         function focusSelectedDate() {
             blurSelectedDate();
             if (settings.debug) {
-                console.log('selected='+selected_date.toISOString());
+                console.log('selected='+state.selected_date.toISOString());
             }
-            var date = moment(selected_date).startOf('day').toISOString();
+            var date = moment(state.selected_date).startOf('day').toISOString();
             $container_element.find("[data-iso-date='"+date+"']").addClass(settings.cssClasses.isSelected);
             // TODO must be the button in the calendar view that was actually triggered
             $container_element.find("[data-iso-date='"+date+"']").first().find('button').focus();
         }
 
         function selectDate(date) {
-            selected_date = moment(date);
+            state.selected_date = moment(date);
 
             var adjusted_date = moment(date);
-            adjusted_date.milliseconds(current_date.milliseconds());
-            adjusted_date.seconds(current_date.seconds());
-            adjusted_date.minutes(current_date.minutes());
-            adjusted_date.hours(current_date.hours());
+            adjusted_date.milliseconds(state.current_date.milliseconds());
+            adjusted_date.seconds(state.current_date.seconds());
+            adjusted_date.minutes(state.current_date.minutes());
+            adjusted_date.hours(state.current_date.hours());
             setCurrentDate(adjusted_date);
         }
 
         function setCurrentDate(date) {
-            if (moment.isMoment(date) && date.isValid()) {
-                current_date = moment(date);
+            if (date && moment.isMoment(date) && date.isValid()) {
+                state.current_date = moment(date);
                 setHiddenElementDate(date);
                 setInputElementDate(date);
             } else {
@@ -601,17 +630,17 @@
             // render N previous months
             for (idx = settings.numberOfMonths.before; idx > 0; idx--) {
                 html += renderCalendarMonth(
-                    moment(current_date).subtract(idx, 'months')
+                    moment(state.current_date).subtract(idx, 'months')
                 );
             }
 
             // render current month
-            html += renderCalendarMonth(moment(current_date));
+            html += renderCalendarMonth(moment(state.current_date));
 
             // render N next months
             for (idx = 1; idx <= settings.numberOfMonths.after; idx++) {
                 html += renderCalendarMonth(
-                    moment(current_date).add(idx, 'months')
+                    moment(state.current_date).add(idx, 'months')
                 );
             }
 
@@ -627,7 +656,7 @@
                 calendarWeeks: prepareCalendarWeeks(date),
                 localeData: date.localeData(),
                 settings: settings,
-                currentDate: current_date,
+                state: state,
                 currentMonth: date
             });
         }
@@ -789,10 +818,10 @@
                     day_css += ' ' + settings.cssClasses.isToday;
                 }*/
                 /*
-                if (render_date.isSame(selected_date, 'day')) {
+                if (render_date.isSame(state.selected_date, 'day')) {
                     day_css += ' ' + settings.cssClasses.isSelected;
                 }
-                if (render_date.isSame(current_date, 'day')) {
+                if (render_date.isSame(state.current_date, 'day')) {
                     day_css += ' ' + settings.cssClasses.isCurrent;
                 }*/
 
@@ -909,13 +938,31 @@
             }
             settings.isRTL = settings.direction === 'rtl' ? true : false;
 
-            var nom = settings.numberOfMonths;
+            settings.debug = !!settings.debug;
+
+            updateNumberOfMonths(settings.numberOfMonths);
+            updateDateConstraints();
+            compileTemplates();
+        }
+
+        function updateNumberOfMonths(nom) {
+            nom = nom || 1;
             if (_.isNumber(nom) && !_.isNaN(nom)) {
-                nom = Math.ceil(Math.abs(nom));
-                if (nom > 1) {
+                nom = Math.ceil(nom);
+                if (nom > 0) {
                     settings.numberOfMonths = {
                         before: 0,
                         after: nom-1
+                    };
+                } else if (nom < 0) {
+                    settings.numberOfMonths = {
+                        before: Math.abs(nom),
+                        after: 0
+                    };
+                } else {
+                    settings.numberOfMonths = {
+                        before: 0,
+                        after: 0
                     };
                 }
             } else if (_.isObject(nom) &&
@@ -930,12 +977,6 @@
             } else {
                 throw new Error('Setting numberOfMonths must be a positive integer or an object with before/after properties with a positive number of months to display before or after the current calendar month.');
             }
-
-
-            settings.debug = !!settings.debug;
-
-            updateDateConstraints();
-            compileTemplates();
         }
 
         function updateDateConstraints() {
