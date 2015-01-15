@@ -176,6 +176,7 @@
         defaultSeconds: 0,
         defaultMilliseconds: 0,
         yearRange: [0, 10],
+        autoFitViewport: true,
         showOnFocus: true,
         showOnAutofocus: true,
         showYearSelect: true,
@@ -793,7 +794,8 @@
         }
 
         function setVisible(flag) {
-            return state.isVisible = flag;
+            state.isVisible = flag;
+            return flag;
         }
 
         function isVisible() {
@@ -841,7 +843,7 @@
             var idx;
 
             // TODO use current date when selected date is far away and reopening picker wouldn't show the current date?
-            var date = getSelectedDate() || getCurrentDate();
+            date = getSelectedDate() || getCurrentDate();
 
             var nom = settings.numberOfMonths.before + settings.numberOfMonths.after + 1;
 
