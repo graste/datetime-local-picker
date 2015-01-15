@@ -80,7 +80,7 @@
         constraints: {
             minDate: null, // must be new Date(…) or a string compatible to inputFormats
             maxDate: null, // must be new Date(…) or a string compatible to inputFormats
-            // alternative:
+            // alternative way (all 4 must be specified):
             minMonth: 0,
             minYear: 1800,
             maxMonth: 11,
@@ -88,20 +88,17 @@
         },
 
         disableWeekends: false,
-        disabledDates: [],
+        //disabledDates: [],
 
         onBeforeShow: null,
         onBeforeHide: null,
         onShow: null,
         onHide: null,
-        onSelect: null,
-        onClear: null,
-        onBeforeDraw: null,
-        onDraw: null,
+        onSetCurrentDate: null,
+        onSetSelectedDate: null,
 
         templates: {
-            calendar: '',
-            //calendarContent: '',
+            containerContent: '',
             //calendarHeader: '<span class="calendar-title"><%- date.format("MMMM YYYY") %></span>',
             //calendarWeekday: '…',
             //calendarWeek: '…',
@@ -109,7 +106,7 @@
             //calendarFooter: '…',
         },
 
-        cssPrefix: 'dtlp-',
+        //cssPrefix: 'dtlp-',
         cssClasses: {
             dayName: 'weekday',
             weekend: 'weekend',
@@ -591,6 +588,20 @@
             highlightInputElement();
         }
 
+        function createEvent(event_name, event_data) {
+            event_name = event_name || 'unnamed';
+            event_data = event_data || {};
+
+            var default_event = {
+                name: event_name,
+                currentDate: moment(getCurrentDate()),
+                selectedDate: moment(getSelectedDate()),
+                isVisible: isVisible()
+            };
+
+            return _.merge(default_event, event_data);
+        }
+
         function gotoPreviousSelectableDate(period) {
             var prev = moment(getSelectedDate());
             period = period || 'day';
@@ -639,18 +650,30 @@
         }
 
         function showContainer() {
+            if (_.isFunction(settings.onBeforeShow)) {
+                _.defer(settings.onBeforeShow, createEvent('beforeShow'));
+            }
             unbindContainerEventHandlers();
             draw();
             bindContainerEventHandlers();
             updateView();
             $elements.container.show().addClass(settings.cssClasses.isVisible);
             setVisible(true);
+            if (_.isFunction(settings.onShow)) {
+                _.defer(settings.onShow, createEvent('show'));
+            }
         }
 
         function hideContainer() {
+            if (_.isFunction(settings.onBeforeHide)) {
+                _.defer(settings.onBeforeHide, createEvent('beforeHide'));
+            }
             unbindContainerEventHandlers();
             $elements.container.hide().removeClass(settings.cssClasses.isVisible);
             setVisible(false);
+            if (_.isFunction(settings.onHide)) {
+                _.defer(settings.onHide, createEvent('hide'));
+            }
         }
 
         function highlightInputElement() {
@@ -736,6 +759,9 @@
             if (isValidDate(date)) {
                 if (settings.debug) { console.log('selectedDate is now: '+date.toISOString()); }
                 state.selectedDate = moment(date);
+                if (_.isFunction(settings.onSetSelectedDate)) {
+                    _.defer(settings.onSetSelectedDate, createEvent('setSelectedDate'));
+                }
                 return true;
             }
             return false;
@@ -747,6 +773,9 @@
                 state.currentDate = moment(date);
                 setOutputElementDate(date);
                 setInputElementDate(date);
+                if (_.isFunction(settings.onSetCurrentDate)) {
+                    _.defer(settings.onSetCurrentDate, createEvent('setCurrentDate'));
+                }
                 return true;
             } else {
                 if (settings.debug) { console.log('resetting from setCurrentDate as date is invalid: '+date.toISOString()); }

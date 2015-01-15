@@ -6,18 +6,6 @@
     <title>datetime-local-picker</title>
     <link rel="stylesheet" type="text/css" href="styles/main.css" />
 <style>
-/*body, label {
-    color: white;
-}
-input {
-    width: 20em;
-}
-.is-invalid {
-    outline: 2px solid red;
-}
-.dtp {
-    color: black;
-}*/
 </style>
 </head>
 <body>
@@ -69,6 +57,17 @@ require([
     'src/DatetimeLocalPicker',
     'ldsh!calendar.tmpl'
 ], function(dtlp, calendar_tmpl) {
+
+    function onSelect(ev) {
+        console.log(ev.name, ev.selectedDate.toISOString(), ev);
+    }
+    function onSet(ev) {
+        console.log(ev.name, ev.currentDate.toISOString(), ev);
+    }
+    function onWhatever(ev) {
+        console.log(ev);
+    }
+
     var picker = new dtlp({
         inputElement: '#publishDate',
         triggerElement: '#publishDateTrigger',
@@ -76,7 +75,6 @@ require([
         locale: $('html').attr('lang'),
         direction: $('html').attr('dir'),
         hideOnSelect: false,
-        disableWeekends: false,
         //minWeeksPerMonth: 6,
         //numberOfMonths: -2,
         /*numberOfMonths: {
@@ -87,10 +85,17 @@ require([
             minDate: '2012-11-05',
             maxDate: '2017-02-24T23:59:59.999'
         },*/
+        //disableWeekends: true,
         templates: {
             containerContent: calendar_tmpl,
             test: '<%- omg %>'
         },
+        onSetCurrentDate: onSet,
+        onSetSelectedDate: onSelect,
+        onShow: onWhatever,
+        onHide: onWhatever,
+        onBeforeShow: onWhatever,
+        onBeforeHide: onWhatever,
         debug: false
     });
 
