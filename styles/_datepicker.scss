@@ -1,37 +1,27 @@
-.datepicker {
-    position: relative;
+.dtp {
+    display: inline-block;
+}
 
+.calendars__footer {
+    padding: 1em;
     background-color: #fff;
     color: #000;
 
+    .select-today,
+    .select-current {
+        border: none;
+        background-color: transparent;
+        font-size: inherit;
+        padding: 0;
+    }
 
-    @media screen and (min-width: 768px) {
-        display: inline-block;
-        padding: 1em;
+    .select-today {
+        width: 25%;
+        text-align: left;
+    }
+
+    .select-current {
+        width: 75%;
+        text-align: right;
     }
 }
-
-.datepicker__pager {
-    position: absolute;
-    top: 1em;
-    left: 1em;
-    right: 1em;
-
-
-    a {
-        text-decoration: none;
-    }
-
-    .previous_year,
-    .previous_month {
-        float: left;
-        margin-right: 1em;
-    }
-
-    .next_year,
-    .next_month {
-        float: right;
-        margin-left: 1em;
-    }
-}
-

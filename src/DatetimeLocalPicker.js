@@ -125,6 +125,7 @@
             inputInvalid: 'is-invalid',
 
             selectToday: 'select-today',
+            selectCurrent: 'select-current',
             gotoPrevMonth: 'goto-prev-month',
             gotoNextMonth: 'goto-next-month',
             gotoPrevYear: 'goto-prev-year',
@@ -464,6 +465,9 @@
 
             if ($target.hasClass(settings.cssClasses.selectToday)) {
                 selectToday();
+            } else if ($target.hasClass(settings.cssClasses.selectCurrent)) {
+                setDay(getCurrentDate());
+                updateViewOrRedraw();
             } else if ($target.parents('.'+settings.cssClasses.calendarHeader).length > 0) {
                 //click event came from some button in the calendar header
                 if ($target.hasClass(settings.cssClasses.gotoPrevMonth)) {
@@ -837,6 +841,22 @@
             $elements.container.html(
                 settings.templates.containerContent(template_data)
             );
+
+            fitViewport();
+        }
+
+        function fitViewport() {
+            var $calendar = $elements.container.find("."+settings.cssClasses.calendar);
+            $elements.container.css("font-size", "");
+            var ratio = screen.availWidth / $calendar.width();
+            var font_size = parseInt($elements.container.css("font-size"), 10);
+            console.log(font_size, $calendar.width());
+
+            if (ratio < 1) {
+                font_size *= ratio;
+                $elements.container.css("font-size", font_size+"px");
+            }
+            console.log(screen.availWidth, ratio);
         }
 
         function prepareCalendar(date) {

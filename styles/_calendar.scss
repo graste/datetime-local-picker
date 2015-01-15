@@ -168,22 +168,10 @@
         }
     }
 
-    @media screen and (max-width: 767px) {
-        @include calendar-list;
-    }
-
-    @media screen and (min-width: 768px) {
-        @include calendar-table;
-
-    }
+    @include calendar-table;
 
     &.calendar--list {
         @include calendar-list;
     }
-
-    &.calendar--table {
-        @include calendar-table;
-    }
-
 }
 
