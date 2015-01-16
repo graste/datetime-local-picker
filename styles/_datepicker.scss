@@ -2,7 +2,7 @@
     display: inline-block;
 }
 
-.calendars__footer {
+.calendars__header {
     padding: 1em;
     background-color: #fff;
     color: #000;
@@ -34,8 +34,20 @@
     }
 }
 
+.calendars__body {
+    text-align: center;
+}
+
 .datepicker {
     display: none;
+
+    @media screen and (max-width:767px) {
+        @include popup(center, bottom, true, 80%);
+    }
+
+    @media screen and (min-width:768px) {
+        @include popup(center, center, false, 70%);
+    }
 }
 
 .datepicker.is-visible {
@@ -45,4 +57,8 @@
 .is-invalid {
     border: 2px solid red;
     background-color: #fcc;
+}
+
+.datepicker__content {
+    background-color: #fff;
 }

@@ -31,6 +31,7 @@
 }
 
 @mixin calendar-list-layout {
+    min-width: 320px; //never be narrower than a classic iPhone
     margin-top: 1em;
 
     &:first-child {

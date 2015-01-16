@@ -491,12 +491,12 @@
         function bindPickerEventHandlers() {
             $elements.picker.on(
                 'keydown.' + settings.logPrefix,
-                'button',//, .'+settings.cssClasses.setDay,
+                '',
                 handlePickerKeydown
             );
             $elements.picker.on(
                 'click.' + settings.logPrefix,
-                'button', //'.'+settings.cssClasses.setDay,
+                '',
                 handlePickerClick
             );
         }
@@ -520,7 +520,8 @@
             var $btns;
             var btn_index;
 
-            var $button = $(ev.target).closest('button');
+            var $target =  $(ev.target);
+            var $button = $target.closest('button');
             if ($button.hasClass(settings.cssClasses.selectToday)) {
                 draw(parseDate());
                 $elements.content.find('.'+settings.cssClasses.isToday+' .'+settings.cssClasses.setDay).focus();
@@ -557,6 +558,10 @@
                     draw(parseDate(value).add(1, 'year'));
                     focusElementIndex('.'+settings.cssClasses.gotoNextYear, btn_index);
                 }
+            } else if ($target.is($elements.picker)) {
+                //this is a click on the outermost container element
+                //it's used as a popup backdrop and a click on it closes the picker
+                togglePicker();
             } else if ($button.hasClass(settings.cssClasses.setDay)) {
                 var $day = $button.closest('.'+settings.cssClasses.day);
                 if ($day.length > 0) {
@@ -681,7 +686,6 @@
                     hidePicker();
                 } else {
                     var parsed_date = parseDate($elements.input.val());
-                    console.log(parsed_date.toISOString());
                     if (!isValidDate(parsed_date)) {
                         parsed_date = parseDate($elements.output.val());
                         if (isValidDate(parsed_date)) {
@@ -712,6 +716,7 @@
             }
 
             updateView();
+            fitViewport();
 
             return true;
         }
@@ -885,7 +890,7 @@
                 } else if ($days.length > 0 && (parsed_date = parseDate($days.attr('data-iso-date'))) && parsed_date.isValid() && selectDay(parsed_date)) {
                     $days.first().addClass(settings.cssClasses.isSelected).focus();
                 } else {
-                    console.log('idkwtd');
+                    //console.log('idkwtd');
                 }
             } else {
                 $day.first().addClass(settings.cssClasses.isSelected).find('.'+settings.cssClasses.setDay).first().focus();
@@ -968,10 +973,6 @@
 
         function getYMD(date) {
             return date.format('YYYYMMDD');
-            if (!moment.isMoment(date)) {
-                console.error('Only valid moment instances are allowed for getYMD, given was:', date);
-                throw new Error('Only valid moment instances are allowed for getYMD');
-            }
         }
 
         function getDayElement(date) {

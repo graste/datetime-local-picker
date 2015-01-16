@@ -14,30 +14,75 @@ body {
 .dtp {
   display: inline-block; }
 
-.calendars__footer {
+.calendars__header {
   padding: 1em;
   background-color: #fff;
   color: #000; }
-  .calendars__footer .select-today,
-  .calendars__footer .select-current {
+  .calendars__header .select-today,
+  .calendars__header .select-current {
     border: none;
     background-color: transparent;
     font-size: inherit;
     padding: 0; }
-  .calendars__footer .select-today {
+  .calendars__header .select-today {
     width: 25%;
     text-align: left; }
-  .calendars__footer .select-current {
+  .calendars__header .select-current {
     width: 75%;
     text-align: right; }
-    .calendars__footer .select-current .min {
+    .calendars__header .select-current .min {
       display: inline; }
-    .calendars__footer .select-current .short,
-    .calendars__footer .select-current .long {
+    .calendars__header .select-current .short,
+    .calendars__header .select-current .long {
       display: none; }
+
+.calendars__body {
+  text-align: center; }
 
 .datepicker {
   display: none; }
+  @media screen and (max-width: 767px) {
+    .datepicker {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.6); }
+      .datepicker::before {
+        content: "";
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle; }
+      .datepicker > div {
+        display: inline-block;
+        vertical-align: bottom;
+        overflow-y: scroll;
+        text-align: initial;
+        width: 100%;
+        max-height: 80%; } }
+  @media screen and (min-width: 768px) {
+    .datepicker {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.6); }
+      .datepicker::before {
+        content: "";
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle; }
+      .datepicker > div {
+        display: inline-block;
+        vertical-align: middle;
+        overflow-y: scroll;
+        text-align: initial;
+        max-width: 70%;
+        max-height: 70%; } }
 
 .datepicker.is-visible {
   display: block; }
@@ -45,6 +90,9 @@ body {
 .is-invalid {
   border: 2px solid red;
   background-color: #fcc; }
+
+.datepicker__content {
+  background-color: #fff; }
 
 .calendar {
   background-color: white;
@@ -144,6 +192,7 @@ body {
       display: none; }
 
 .calendar--list .calendar {
+  min-width: 320px;
   margin-top: 1em; }
   .calendar--list .calendar:first-child {
     margin-top: 0; }
@@ -200,5 +249,3 @@ body {
       display: inline; }
     .calendar--table .calendar .calendar-week .long {
       display: none; }
-
-/*# sourceMappingURL=main.css.map */
