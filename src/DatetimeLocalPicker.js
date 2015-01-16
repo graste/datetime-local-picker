@@ -115,8 +115,9 @@
             week: 'week',
             weekNumber: 'calendar-week',
             day: 'day',
-            dayPrevMonth: 'day--excess day--prev-month',
-            dayNextMonth: 'day--excess day--next-month',
+            dayExcess: 'day--excess',
+            dayPrevMonth: 'day--prev-month',
+            dayNextMonth: 'day--next-month',
 
             isVisible: 'is-visible',
             isDisabled: 'day--disabled',
@@ -128,6 +129,9 @@
 
             selectToday: 'select-today',
             selectCurrent: 'select-current',
+
+            setDay: 'set-day',
+
             gotoPrevMonth: 'goto-prev-month',
             gotoNextMonth: 'goto-next-month',
             gotoPrevYear: 'goto-prev-year',
@@ -171,6 +175,8 @@
                 gotoNextYearTitle: 'jump forward one year'
             }
         },
+
+        displayModes: ['calendar--table', 'calendar--list'],
 
         // from here on: TBD
 
@@ -271,6 +277,9 @@
             getCurrentDate: function() {
                 return moment(getCurrentDate());
             },
+            getCurrentElement: function() {
+                return getDayElement(getCurrentDate());
+            },
             getInputElement: function() {
                 return $elements.input;
             },
@@ -294,6 +303,9 @@
             },
             getSelectedDate: function() {
                 return moment(getSelectedDate());
+            },
+            getSelectedElement: function() {
+                return getDayElement(getSelectedDate());
             },
             getSettings: function() {
                 return _.cloneDeep(settings, cloneSpecialValues);
@@ -332,6 +344,10 @@
                 if (setDay(mixed)) {
                     updateViewOrRedraw();
                 }
+                return this;
+            },
+            addClass: function(css) {
+                $elements.picker.addClass(css);
                 return this;
             },
             setNumberOfMonths: function(nom) {
@@ -448,8 +464,8 @@
         }
 
         function bindPickerEventHandlers() {
-            $elements.picker.on('keydown.' + settings.logPrefix, 'button', handlePickerKeydown);
-            $elements.picker.on('click.' + settings.logPrefix, 'button', handlePickerClick);
+            $elements.picker.on('keydown.' + settings.logPrefix, '.'+settings.cssClasses.setDay, handlePickerKeydown);
+            $elements.picker.on('click.' + settings.logPrefix, '.'+settings.cssClasses.setDay, handlePickerClick);
         }
 
         function unbindPickerEventHandlers() {
@@ -491,6 +507,7 @@
                     updateViewOrRedraw();
                 }
             } else {
+                // button.set-day
                 // probably a click on a day button; is there a day cell involved?
                 selected_day = $target.parents('[data-iso-date]');
                 if (selected_day.length > 0) {
@@ -509,34 +526,58 @@
             }
         }
 
+        function getDisplayMode(date) {
+            var $selected_day = getDayElement(date);
+            var value = $selected_day.closest('.'+settings.cssClasses.calendarBody).css('display');
+            if (settings.displayModes.indexOf(value) !== -1) {
+                return settings.displayModes[value];
+            }
+            return 'table';
+        }
+
         function handlePickerKeydown(ev) {
             if (settings.debug) { console.log('handlePickerKeydown', ev); }
+            if (!isVisible()) {
+                return;
+            }
+
+            var display_mode = getDisplayMode(getSelectedDate());
+            if (settings.debug) { console.log('display_mode='+display_mode); }
+
             switch (ev.keyCode) {
                 case 37: // left
                     if (settings.debug) { console.log('LEFT'); }
                     ev.preventDefault(); // prevent viewport scrolling
-                    if (gotoPreviousSelectableDate('day')) {
+                    if (display_mode === 'table' && gotoPreviousSelectableDate('day')) {
+                        updateViewOrRedraw();
+                    } else if (display_mode === 'list' && gotoPreviousSelectableDate('month')) {
                         updateViewOrRedraw();
                     }
                     break;
                 case 39: // right
                     if (settings.debug) { console.log('RIGHT'); }
                     ev.preventDefault(); // prevent viewport scrolling
-                    if (gotoNextSelectableDate('day')) {
+                    if (display_mode === 'table' && gotoNextSelectableDate('day')) {
+                        updateViewOrRedraw();
+                    } else if (display_mode === 'list' && gotoNextSelectableDate('month')) {
                         updateViewOrRedraw();
                     }
                     break;
                 case 38: // up
                     if (settings.debug) { console.log('UP'); }
                     ev.preventDefault(); // prevent viewport scrolling
-                    if (gotoPreviousSelectableDate('week')) {
+                    if (display_mode === 'table' && gotoPreviousSelectableDate('week')) {
+                        updateViewOrRedraw();
+                    } else if (display_mode === 'list' && gotoPreviousSelectableDate('day')) {
                         updateViewOrRedraw();
                     }
                     break;
                 case 40: // down
                     if (settings.debug) { console.log('DOWN'); }
                     ev.preventDefault(); // prevent viewport scrolling
-                    if (gotoNextSelectableDate('week')) {
+                    if (display_mode === 'table' && gotoNextSelectableDate('week')) {
+                        updateViewOrRedraw();
+                    } else if (display_mode === 'list' && gotoNextSelectableDate('day')) {
                         updateViewOrRedraw();
                     }
                     break;
@@ -588,7 +629,7 @@
         }
 
         function updateViewOrRedraw() {
-            if ($elements.picker.find("[data-ymd='"+getSelectedDate().format('YYYYMMDD')+"']").length < 1) {
+            if ($elements.content.find("[data-ymd='"+getYMD(getSelectedDate())+"']").length < 1) {
                 redraw();
             } else {
                 updateView();
@@ -628,7 +669,7 @@
             var prev = moment(getSelectedDate());
             period = period || 'day';
             do {
-                // TODO this should jump of disabled week ends etc by decreasing the unit etc.
+                // TODO decrease jump period unit if necessary?
                 if (settings.isRTL && period === 'day') {
                     prev.add(1, period);
                 } else {
@@ -647,7 +688,7 @@
             var next = moment(getSelectedDate());
             period = period || 'day';
             do {
-                // TODO this should jump of disabled week ends etc by increasing the unit etc.
+                // TODO decrease jump period unit if necessary?
                 if (settings.isRTL && period === 'day') {
                     next.subtract(1, period);
                 } else {
@@ -707,13 +748,13 @@
         }
 
         function highlightToday() {
-            var ymd = moment().format('YYYYMMDD');
+            var ymd = getYMD(moment());
             $elements.content.find('.'+settings.cssClasses.isToday).removeClass(settings.cssClasses.isToday);
             $elements.content.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isToday);
         }
 
         function highlightCurrentDate() {
-            var ymd = moment(getCurrentDate()).format('YYYYMMDD');
+            var ymd = getYMD(getCurrentDate());
             $elements.content.find('.'+settings.cssClasses.isCurrent).removeClass(settings.cssClasses.isCurrent);
             $elements.content.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isCurrent);
         }
@@ -724,10 +765,10 @@
 
         function focusSelectedDate() {
             blurSelectedDate();
-            var ymd = moment(getSelectedDate()).format('YYYYMMDD');
+            var ymd = getYMD(getSelectedDate());
+            var $elm = getDayElement(getSelectedDate());
             $elements.content.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isSelected);
-            // TODO must be the button in the calendar view that was actually triggered
-            $elements.content.find("[data-ymd='"+ymd+"']").first().find('button').focus();
+            $elm.find('.'+settings.cssClasses.setDay).focus();
         }
 
         function selectToday() {
@@ -809,9 +850,50 @@
             return state.currentDate;
         }
 
+        function getYMD(date) {
+            if (!moment.isMoment(date)) {
+                console.error('Only valid moment instances are allowed for getYMD, given was:', date);
+                return 'fail';
+            }
+            return date.format('YYYYMMDD');
+        }
+
+        function getDayElement(date) {
+            var days = $elements.content.find('[data-ymd="'+getYMD(date)+'"]'); // could be excess days in multiple calendars
+            if (days.length === 0) {
+                return false;
+            } else if (days.length > 1) {
+                // prefer the calendar where that day is part of the actual month
+                var elm = days.not('.'+settings.cssClasses.dayExcess);
+                if (elm.length > 0) {
+                    return elm.first();
+                }
+            }
+
+            return days.first();
+        }
+
+        function hasDayElement(date) {
+            return $elements.content.has('[data-ymd="'+getYMD(date)+'"]');
+        }
+
         function setVisible(flag) {
             state.isVisible = flag;
             return flag;
+        }
+
+        function isVisibleDay(date) {
+            if (date && moment.isMoment(date) && $elements.content.has('[data-ymd="'+getYMD(date)+'"]')) {
+                return true;
+            }
+            return false;
+        }
+
+        function isSelectableDay(date) {
+            if (isValidDate(date) && $elements.content.has('[data-ymd="'+getYMD(date)+'"]')) {
+                return true;
+            }
+            return false;
         }
 
         function isVisible() {
@@ -1072,9 +1154,9 @@
                     day_css += ' ' + settings.cssClasses.weekend;
                 }
                 if (idx < days_before) {
-                    day_css += ' ' + settings.cssClasses.dayPrevMonth;
+                    day_css += ' ' + settings.cssClasses.dayExcess + ' ' + settings.cssClasses.dayPrevMonth;
                 } else if (idx >= (days_before + days_in_month)) {
-                    day_css += ' ' + settings.cssClasses.dayNextMonth;
+                    day_css += ' ' + settings.cssClasses.dayExcess + ' ' + settings.cssClasses.dayNextMonth;
                 }
                 if (isDisabled(render_date)) {
                     day_css += ' ' + settings.cssClasses.isDisabled;
@@ -1097,7 +1179,7 @@
                     css: day_css,
                     date: moment(render_date),
                     isoDate: render_date.toISOString(),
-                    ymd: moment(render_date).format('YYYYMMDD'),
+                    ymd: getYMD(render_date),
                     dayValid: day_valid,
                     content: day_content
                 };

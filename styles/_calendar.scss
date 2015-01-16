@@ -112,66 +112,12 @@
         }
     }
 
-    @mixin calendar-list {
-
-        @include calendar-list-layout;
-
-        .calendar-week {
-            color: inherit;
-            border-bottom: 3px solid #ccc;
-
-            .min {
-                display: none;
-            }
-
-            .long {
-                display: inline;
-            }
-        }
-
-        .day {
-            .min,
-            .short {
-                display: none;
-            }
-
-            .long {
-                display: inline;
-            }
-        }
-    }
-
-    @mixin calendar-table {
-        @include calendar-table-layout;
-
-        .day {
-            .short,
-            .long {
-                display: none;
-            }
-
-            .min {
-                display: inline;
-            }
-        }
-
-        .calendar-week {
-            border-bottom: none;
-
-            .min {
-                display: inline;
-            }
-
-            .long {
-                display: none;
-            }
-        }
-    }
-
     @include calendar-table;
-
-    &.calendar--list {
-        @include calendar-list;
-    }
 }
 
+.calendar--list .calendar {
+    @include calendar-list;
+}
+.calendar--table .calendar {
+    @include calendar-table;
+}

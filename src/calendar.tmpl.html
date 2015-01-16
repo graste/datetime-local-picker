@@ -34,7 +34,7 @@
                         </div>
                         <% _.forEach(week.days, function(day) { %>
                         <div class="<%- day.css %>" data-ymd="<%- day.ymd %>" data-iso-date="<%- day.isoDate %>">
-                            <button type="button" class="select-day" title="<%- day.date.format('dddd, LL') %>">
+                            <button type="button" class="set-day" title="<%- day.date.format('dddd, LL') %>">
                                 <abbr class="min" title="<%- day.date.format('dddd, LL') %>"><%- day.date.date() %></abbr>
                                 <abbr class="short" title="<%- day.date.format('dddd, LL') %>"><%- day.date.format("L") %></abbr>
                                 <span class="long"><%- day.date.format("dddd, LL") %></span>

@@ -71,23 +71,23 @@ require([
         triggerElement: '#publishDateTrigger',
         locale: $('html').attr('lang'),
         direction: $('html').attr('dir'),
-        hideOnSet: false,
+        hideOnSet: true,
         minWeeksPerMonth: 6,
         //numberOfMonths: -2,
         /*numberOfMonths: {
             before: 2,
             after: 6
         },*/
-        /*constraints: {
-            minDate: '2012-11-05',
-            maxDate: '2017-02-24T13:59:59.999'
-        },*/
-        //disableWeekends: true,
+        constraints: {
+            minDate: '2010-01-01',
+            maxDate: '2030-05-14T13:59:59.999'
+        },
+        disableWeekends: true,
         templates: {
             calendars: calendars_tmpl
         },
-        onSetCurrentDate: onSet,
-        onSetSelectedDate: onSelect, /*
+        /*onSetCurrentDate: onSet,
+        onSetSelectedDate: onSelect,
         onShow: onWhatever,
         onHide: onWhatever,
         onBeforeShow: onWhatever,

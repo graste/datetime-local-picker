@@ -137,32 +137,61 @@ body {
       display: inline; }
     .calendar .calendar-week .long {
       display: none; }
-  .calendar.calendar--list {
-    margin-top: 1em; }
-    .calendar.calendar--list:first-child {
-      margin-top: 0; }
-    .calendar.calendar--list .calendar__body {
-      display: block; }
-    .calendar.calendar--list .calendar-week {
-      text-align: left; }
-      .calendar.calendar--list .calendar-week.is-empty {
-        display: none; }
-    .calendar.calendar--list .weeks,
-    .calendar.calendar--list .week,
-    .calendar.calendar--list .day {
-      display: block; }
-    .calendar.calendar--list .weekday,
-    .calendar.calendar--list .day--excess {
+
+.calendar--list .calendar {
+  margin-top: 1em; }
+  .calendar--list .calendar:first-child {
+    margin-top: 0; }
+  .calendar--list .calendar .calendar__body {
+    display: block; }
+  .calendar--list .calendar .calendar-week {
+    text-align: left; }
+    .calendar--list .calendar .calendar-week.is-empty {
       display: none; }
-    .calendar.calendar--list .calendar-week {
-      color: inherit;
-      border-bottom: 3px solid #ccc; }
-      .calendar.calendar--list .calendar-week .min {
-        display: none; }
-      .calendar.calendar--list .calendar-week .long {
-        display: inline; }
-    .calendar.calendar--list .day .min,
-    .calendar.calendar--list .day .short {
+  .calendar--list .calendar .weeks,
+  .calendar--list .calendar .week,
+  .calendar--list .calendar .day {
+    display: block; }
+  .calendar--list .calendar .weekday,
+  .calendar--list .calendar .day--excess {
+    display: none; }
+  .calendar--list .calendar .calendar-week {
+    color: inherit;
+    border-bottom: 3px solid #ccc; }
+    .calendar--list .calendar .calendar-week .min {
       display: none; }
-    .calendar.calendar--list .day .long {
+    .calendar--list .calendar .calendar-week .long {
       display: inline; }
+  .calendar--list .calendar .day .min,
+  .calendar--list .calendar .day .short {
+    display: none; }
+  .calendar--list .calendar .day .long {
+    display: inline; }
+
+.calendar--table .calendar {
+  display: inline-block; }
+  .calendar--table .calendar .calendar__body {
+    display: table; }
+  .calendar--table .calendar .weekdays {
+    display: table-header-group; }
+    .calendar--table .calendar .weekdays > div {
+      display: table-row; }
+      .calendar--table .calendar .weekdays > div > div {
+        display: table-cell; }
+  .calendar--table .calendar .weeks {
+    display: table-row-group; }
+  .calendar--table .calendar .week {
+    display: table-row; }
+  .calendar--table .calendar .day {
+    display: table-cell; }
+  .calendar--table .calendar .day .short,
+  .calendar--table .calendar .day .long {
+    display: none; }
+  .calendar--table .calendar .day .min {
+    display: inline; }
+  .calendar--table .calendar .calendar-week {
+    border-bottom: none; }
+    .calendar--table .calendar .calendar-week .min {
+      display: inline; }
+    .calendar--table .calendar .calendar-week .long {
+      display: none; }
