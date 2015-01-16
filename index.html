@@ -21,8 +21,6 @@
         id="publishDate"
     >
     <button class="dtp__trigger" id="publishDateTrigger">trigger</button>
-    <div class="dtp__container" id="publishDatePickerContainer">
-    </div>
 </div>
 <div id="output"></div>
 
@@ -56,7 +54,7 @@ require.config({
 require([
     'src/DatetimeLocalPicker',
     'ldsh!calendar.tmpl'
-], function(dtlp, calendar_tmpl) {
+], function(dtlp, calendars_tmpl) {
 
     function onSelect(ev) {
         console.log(ev.name, ev.selectedDate.toISOString(), ev);
@@ -71,11 +69,10 @@ require([
     var picker = new dtlp({
         inputElement: '#publishDate',
         triggerElement: '#publishDateTrigger',
-        containerElement: '#publishDatePickerContainer',
         locale: $('html').attr('lang'),
         direction: $('html').attr('dir'),
-        hideOnSelect: false,
-        //minWeeksPerMonth: 6,
+        hideOnSet: false,
+        minWeeksPerMonth: 6,
         //numberOfMonths: -2,
         /*numberOfMonths: {
             before: 2,
@@ -83,19 +80,18 @@ require([
         },*/
         /*constraints: {
             minDate: '2012-11-05',
-            maxDate: '2017-02-24T23:59:59.999'
+            maxDate: '2017-02-24T13:59:59.999'
         },*/
         //disableWeekends: true,
         templates: {
-            containerContent: calendar_tmpl,
-            test: '<%- omg %>'
+            calendars: calendars_tmpl
         },
         onSetCurrentDate: onSet,
-        onSetSelectedDate: onSelect,
+        onSetSelectedDate: onSelect/*,
         onShow: onWhatever,
         onHide: onWhatever,
         onBeforeShow: onWhatever,
-        onBeforeHide: onWhatever,
+        onBeforeHide: onWhatever,*/
         debug: false
     });
 

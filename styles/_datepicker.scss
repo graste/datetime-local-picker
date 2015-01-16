@@ -25,3 +25,10 @@
         text-align: right;
     }
 }
+
+.datepicker {
+    display: none;
+}
+.datepicker.is-visible {
+    display: block;
+}

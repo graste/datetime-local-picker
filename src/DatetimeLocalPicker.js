@@ -19,14 +19,16 @@
 
     var default_settings = {
         inputElement: null,
+        outputElement: null,
         triggerElement: null,
-        containerElement: null,
+        pickerElement: null,
+        pickerContentElement: null,
         utcOffsetElement: null,
 
         locale: 'en',
         direction: 'ltr', //isRTL: false,
         parseStrict: true,
-        hideOnSelect: false,
+        hideOnSet: false,
 
         // must be given per locale as moment doesn't include this
         // see https://github.com/moment/moment/issues/1947
@@ -69,7 +71,6 @@
         displayFormat: 'L LTS',
 
         outputFormat: 'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
-        outputElement: null,
         output: {
             forceHours: null,
             forceMinutes: null,
@@ -98,7 +99,8 @@
         onSetSelectedDate: null,
 
         templates: {
-            containerContent: '',
+            picker: '<div class="datepicker"><div class="datepicker__content"></div></div>',
+            calendars: ''
             //calendarHeader: '<span class="calendar-title"><%- date.format("MMMM YYYY") %></span>',
             //calendarWeekday: '…',
             //calendarWeek: '…',
@@ -131,7 +133,8 @@
             gotoPrevYear: 'goto-prev-year',
             gotoNextYear: 'goto-next-year',
 
-            container: 'calendars-wrapper',
+            picker: 'datepicker',
+            pickerContent: 'datepicker__content',
 
             calendars: 'calendars',
             calendarsHeader: 'calendars__header',
@@ -243,9 +246,10 @@
         // TODO validate given HTML elements or selector strings
 
         var $elements = {
-            trigger: null,
-            container: null,
             input: null,
+            picker: null,
+            content: null,
+            trigger: null,
             output: null
         };
         updateElements();
@@ -264,26 +268,29 @@
 
         // return public api
         return {
-            getInputElement: function() {
-                return $elements.input;
-            },
-            getOutputElement: function() {
-                return $elements.output;
-            },
-            getTriggerElement: function() {
-                return $elements.trigger;
-            },
-            getContainerElement: function() {
-                return $elements.container;
-            },
             getCurrentDate: function() {
                 return moment(getCurrentDate());
+            },
+            getInputElement: function() {
+                return $elements.input;
             },
             getMinDate: function() {
                 return moment(settings.constraints.minDate);
             },
             getMaxDate: function() {
                 return moment(settings.constraints.maxDate);
+            },
+            getOutputElement: function() {
+                return $elements.output;
+            },
+            getPickerContentElement: function() {
+                return $elements.content;
+            },
+            getPickerElement: function() {
+                return $elements.picker;
+            },
+            getTriggerElement: function() {
+                return $elements.trigger;
             },
             getSelectedDate: function() {
                 return moment(getSelectedDate());
@@ -331,28 +338,28 @@
                 updateNumberOfMonths(nom);
                 return this;
             },
-            unbind: function() {
-                unbindEventHandlers();
-                return this;
-            },
             bind: function() {
                 bindEventHandlers();
                 return this;
             },
-            toggle: function() {
-                toggleContainer();
-                return this;
-            },
-            show: function() {
-                showContainer();
-                return this;
-            },
-            hide: function() {
-                hideContainer();
+            unbind: function() {
+                unbindEventHandlers();
                 return this;
             },
             redraw: function() {
                 redraw();
+                return this;
+            },
+            show: function() {
+                showPicker();
+                return this;
+            },
+            hide: function() {
+                hidePicker();
+                return this;
+            },
+            toggle: function() {
+                togglePicker();
                 return this;
             },
             toLocaleString: function() {
@@ -419,7 +426,7 @@
             });
 
             $elements.trigger.on('click.' + settings.logPrefix, function(ev) {
-                toggleContainer();
+                togglePicker();
                 focusSelectedDate();
             });
         }
@@ -437,27 +444,27 @@
                 $elements.input.off('.' + settings.logPrefix);
             }
 
-            unbindContainerEventHandlers();
+            unbindPickerEventHandlers();
         }
 
-        function bindContainerEventHandlers() {
-            $elements.container.on('keydown.' + settings.logPrefix, 'button', handleContainerKeydown);
-            $elements.container.on('click.' + settings.logPrefix, 'button', handleContainerClick);
+        function bindPickerEventHandlers() {
+            $elements.picker.on('keydown.' + settings.logPrefix, 'button', handlePickerKeydown);
+            $elements.picker.on('click.' + settings.logPrefix, 'button', handlePickerClick);
         }
 
-        function unbindContainerEventHandlers() {
-            if (!_.isNull($elements.container)) {
-                $elements.container.off('.'+settings.logPrefix);
+        function unbindPickerEventHandlers() {
+            if (!_.isNull($elements.picker)) {
+                $elements.picker.off('.'+settings.logPrefix);
             }
         }
 
-        function rebindContainerEventHandlers() {
-            unbindContainerEventHandlers();
-            bindContainerEventHandlers();
+        function rebindPickerEventHandlers() {
+            unbindPickerEventHandlers();
+            bindPickerEventHandlers();
         }
 
-        function handleContainerClick(ev) {
-            if (settings.debug) { console.log('handleContainerClick', ev); }
+        function handlePickerClick(ev) {
+            if (settings.debug) { console.log('handlePickerClick', ev); }
             var set;
             var selected_day;
             var parsed_date;
@@ -489,8 +496,8 @@
                 if (selected_day.length > 0) {
                     parsed_date = parseDate(selected_day.attr('data-iso-date'));
                     if (setDay(parsed_date)) {
-                        if (settings.hideOnSelect) {
-                            hideContainer();
+                        if (settings.hideOnSet) {
+                            hidePicker();
                             $elements.input.focus();
                         } else {
                             updateViewOrRedraw();
@@ -502,8 +509,8 @@
             }
         }
 
-        function handleContainerKeydown(ev) {
-            if (settings.debug) { console.log('handleContainerKeydown', ev); }
+        function handlePickerKeydown(ev) {
+            if (settings.debug) { console.log('handlePickerKeydown', ev); }
             switch (ev.keyCode) {
                 case 37: // left
                     if (settings.debug) { console.log('LEFT'); }
@@ -536,7 +543,7 @@
                 case 27: // escape
                     if (settings.debug) { console.log('ESCAPE'); }
                     ev.preventDefault();
-                    hideContainer();
+                    hidePicker();
                     $elements.input.focus();
                     break;
                 default:
@@ -557,7 +564,7 @@
             if (ev.keyCode === 13) { // enter
                 if (settings.debug) { console.log('RETURN'); }
                 ev.preventDefault(); // otherwise the focusSelectedDate() would close the dialog again ;-)
-                toggleContainer();
+                togglePicker();
                 focusSelectedDate();
             }
         }
@@ -571,7 +578,7 @@
         }
 
         function updateViewOrRedraw() {
-            if ($elements.container.find("[data-ymd='"+getSelectedDate().format('YYYYMMDD')+"']").length < 1) {
+            if ($elements.picker.find("[data-ymd='"+getSelectedDate().format('YYYYMMDD')+"']").length < 1) {
                 redraw();
             } else {
                 updateView();
@@ -580,9 +587,9 @@
 
         function redraw() {
             if (isVisible()) {
-                showContainer();
+                showPicker();
             } else {
-                hideContainer();
+                hidePicker();
             }
         }
 
@@ -645,36 +652,36 @@
             return false;
         }
 
-        function toggleContainer() {
+        function togglePicker() {
             setVisible(!isVisible());
             if (isVisible()) {
-                showContainer();
+                showPicker();
             } else {
-                hideContainer();
+                hidePicker();
             }
         }
 
-        function showContainer() {
+        function showPicker() {
             if (_.isFunction(settings.onBeforeShow)) {
                 _.defer(settings.onBeforeShow, createEvent('beforeShow'));
             }
-            unbindContainerEventHandlers();
+            unbindPickerEventHandlers();
             draw();
-            bindContainerEventHandlers();
+            bindPickerEventHandlers();
             updateView();
-            $elements.container.show().addClass(settings.cssClasses.isVisible);
+            $elements.picker.addClass(settings.cssClasses.isVisible);
             setVisible(true);
             if (_.isFunction(settings.onShow)) {
                 _.defer(settings.onShow, createEvent('show'));
             }
         }
 
-        function hideContainer() {
+        function hidePicker() {
             if (_.isFunction(settings.onBeforeHide)) {
                 _.defer(settings.onBeforeHide, createEvent('beforeHide'));
             }
-            unbindContainerEventHandlers();
-            $elements.container.hide().removeClass(settings.cssClasses.isVisible);
+            unbindPickerEventHandlers();
+            $elements.picker.removeClass(settings.cssClasses.isVisible);
             setVisible(false);
             if (_.isFunction(settings.onHide)) {
                 _.defer(settings.onHide, createEvent('hide'));
@@ -691,36 +698,31 @@
 
         function highlightToday() {
             var ymd = moment().format('YYYYMMDD');
-            $elements.container.find('.'+settings.cssClasses.isToday).removeClass(settings.cssClasses.isToday);
-            $elements.container.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isToday);
+            $elements.content.find('.'+settings.cssClasses.isToday).removeClass(settings.cssClasses.isToday);
+            $elements.content.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isToday);
         }
 
         function highlightCurrentDate() {
             var ymd = moment(getCurrentDate()).format('YYYYMMDD');
-            $elements.container.find('.'+settings.cssClasses.isCurrent).removeClass(settings.cssClasses.isCurrent);
-            $elements.container.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isCurrent);
+            $elements.content.find('.'+settings.cssClasses.isCurrent).removeClass(settings.cssClasses.isCurrent);
+            $elements.content.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isCurrent);
         }
 
         function blurSelectedDate() {
-            $elements.container.find('.'+settings.cssClasses.isSelected).removeClass(settings.cssClasses.isSelected);
+            $elements.content.find('.'+settings.cssClasses.isSelected).removeClass(settings.cssClasses.isSelected);
         }
 
         function focusSelectedDate() {
             blurSelectedDate();
             var ymd = moment(getSelectedDate()).format('YYYYMMDD');
-            $elements.container.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isSelected);
+            $elements.content.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isSelected);
             // TODO must be the button in the calendar view that was actually triggered
-            $elements.container.find("[data-ymd='"+ymd+"']").first().find('button').focus();
+            $elements.content.find("[data-ymd='"+ymd+"']").first().find('button').focus();
         }
 
         function selectToday() {
-            if (setDay(moment())) {
-                if (settings.hideOnSelect) {
-                    hideContainer();
-                    $elements.input.focus();
-                } else {
-                    updateViewOrRedraw();
-                }
+            if (selectDay(moment())) {
+                updateViewOrRedraw();
                 return true;
             } else {
                 if (settings.debug) { console.log('Seems today is not a valid date?'); }
@@ -837,29 +839,32 @@
         }
 
         function draw() {
-            var template_data = prepareCalendar();
-            $elements.container.html(
-                settings.templates.containerContent(template_data)
+            var template_data = prepareCalendars();
+            $elements.content.html(
+                settings.templates.calendars(template_data)
             );
 
             fitViewport();
         }
 
         function fitViewport() {
-            var $calendar = $elements.container.find("."+settings.cssClasses.calendar);
-            $elements.container.css("font-size", "");
+            var $calendar = $elements.content.find("."+settings.cssClasses.calendar);
+            $elements.content.css("font-size", "");
+
             var ratio = screen.availWidth / $calendar.width();
-            var font_size = parseInt($elements.container.css("font-size"), 10);
-            console.log(font_size, $calendar.width());
+            var font_size = parseInt($elements.content.css("font-size"), 10);
+
+            if (settings.debug) { console.log('font_size=' + font_size, 'calendar_width=' + $calendar.width()); }
 
             if (ratio < 1) {
                 font_size *= ratio;
-                $elements.container.css("font-size", font_size+"px");
+                $elements.content.css("font-size", font_size+"px");
             }
-            console.log(screen.availWidth, ratio);
+
+            if (settings.debug) { console.log('screen.availWidth=' + screen.availWidth, 'ratio=' + ratio); }
         }
 
-        function prepareCalendar(date) {
+        function prepareCalendars(date) {
             var idx;
 
             // TODO use current date when selected date is far away and reopening picker wouldn't show the current date?
@@ -976,7 +981,7 @@
                 weekdays_data.push(weekday_data);
             }
 
-            /* unneccessary when container element has html attribute dir="rtl" set
+            /* unneccessary when html attribute dir="rtl" is set
             if (settings.isRTL) {
                 weekdays_data.reverse();
             }*/
@@ -1107,7 +1112,7 @@
                 render_date.add(1, 'day');
             }
 
-            /* unneccessary when html or container element has attribute dir="rtl" set
+            /* unneccessary when html element has attribute dir="rtl" set
             if (settings.isRTL) {
                 _.forEach(weeks_data, function(week_data, index, collection) {
                     week_data.days.reverse();
@@ -1154,20 +1159,35 @@
         }
 
         function updateElements() {
-            $elements.trigger = $(settings.triggerElement);
+            var content = '';
+
+            $elements.trigger = settings.triggerElement ? $(settings.triggerElement) : null;
             $elements.input = $(settings.inputElement);
 
-            $elements.container = settings.containerElement ? $(settings.containerElement) : null;
-            if (_.isNull($elements.container)) {
-                $elements.container = $('<div>');
-                $elements.container.attr('id', 'container'+settings.logPrefix);
-                $elements.container.insertAfter($elements.input);
+            $elements.picker = settings.pickerElement ? $(settings.pickerElement) : null;
+            if (_.isNull($elements.picker)) {
+                content = settings.templates.picker({
+                   settings: settings
+                });
+                $elements.picker = $(content);
+                $elements.picker.attr('id', 'dtlp' + settings.logPrefix);
+
+                $elements.content = $elements.picker.find('.' + settings.cssClasses.pickerContent).first();
+                $elements.content.attr('id', 'dtlpcontent' + settings.logPrefix);
+                $elements.content.addClass(settings.cssClasses.pickerContent);
+
+                // TODO make other insert positions configurable? OTOH pickerElement can be set already
+                if ($elements.trigger) {
+                    $elements.picker.insertAfter($elements.trigger);
+                } else {
+                    $elements.picker.insertAfter($elements.input);
+                }
             }
-            $elements.container.addClass(settings.cssClasses.container);
+            $elements.picker.addClass(settings.cssClasses.picker);
 
             $elements.output = $elements.input.clone();
             $elements.output.attr('id', $elements.output.attr('id') + settings.logPrefix);
-            $elements.output.attr('type', 'search');
+            $elements.output.attr('type', 'hidden');
             $elements.output.insertBefore($elements.input);
             $elements.output.hide();
             $elements.input.removeAttr('name');
@@ -1220,7 +1240,7 @@
             }
             settings.inputFormats.push(settings.displayFormat);
 
-            settings.hideOnSelect = !!settings.hideOnSelect;
+            settings.hideOnSet = !!settings.hideOnSet;
             settings.disableWeekends = !!settings.disableWeekends;
             settings.debug = !!settings.debug;
 
