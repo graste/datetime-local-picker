@@ -566,6 +566,16 @@
                 ev.preventDefault(); // otherwise the focusSelectedDate() would close the dialog again ;-)
                 togglePicker();
                 focusSelectedDate();
+            } else if (ev.keyCode === 27) {
+                if (settings.debug) { console.log('ESCAPE'); }
+                if (isVisible()) {
+                    hidePicker();
+                } else {
+                    var parsed_date = parseDate($elements.input.val());
+                    if (!isValidDate(parsed_date)) {
+                        resetInputElementDate();
+                    }
+                }
             }
         }
 
