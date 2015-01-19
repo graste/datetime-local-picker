@@ -16,6 +16,7 @@ body {
 
 .calendars__header {
   padding: 1em;
+  padding-bottom: 0;
   background-color: #fff;
   color: #000; }
   .calendars__header .select-today,
@@ -98,20 +99,28 @@ body {
   background-color: white;
   color: #000;
   display: inline-block; }
+  .calendar .calendar__header .month,
+  .calendar .calendar__header .year {
+    display: inline-block;
+    width: 50%; }
+  .calendar .calendar__header button,
+  .calendar .calendar__header span {
+    display: inline-block; }
+  .calendar .calendar__header button {
+    width: 25%; }
+  .calendar .calendar__header span {
+    width: 50%; }
+  .calendar button {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    padding: 1em; }
+    .calendar button::after {
+      position: absolute; }
   .calendar .calendar__header {
-    padding: 1em;
     text-align: center; }
-    .calendar .calendar__header .month,
-    .calendar .calendar__header .year {
-      display: inline-block;
-      width: 50%; }
-    .calendar .calendar__header button,
-    .calendar .calendar__header span {
-      display: inline-block; }
     .calendar .calendar__header button {
-      width: 25%; }
-    .calendar .calendar__header span {
-      width: 50%; }
+      padding-top: 0 1em; }
   .calendar .weekday,
   .calendar .calendar-week {
     padding: 1em;
@@ -149,18 +158,12 @@ body {
   .calendar .day--disabled {
     color: #c77; }
   .calendar button {
-    display: inline-block;
-    width: 100%;
-    padding: 1em;
-    border: none;
     background-color: transparent;
     text-align: right;
     border: 1px solid transparent;
     font-size: inherit;
-    color: inherit;
-    position: relative; }
+    color: inherit; }
     .calendar button::after {
-      position: absolute;
       bottom: 2px;
       left: 2px;
       right: 2px;

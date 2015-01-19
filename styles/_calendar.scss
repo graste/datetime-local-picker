@@ -1,30 +1,15 @@
 @import "calendar_mixins";
 
 .calendar {
+    @include calendar-layout;
     background-color: white;
     color: #000;
 
     .calendar__header {
-        padding: 1em;
         text-align: center;
 
-        .month,
-        .year {
-            display: inline-block;
-            width: 50%;
-        }
-
-        button,
-        span {
-            display: inline-block;
-        }
-
         button {
-            width: 25%;
-        }
-
-        span {
-            width: 50%;
+            padding-top: 0 1em;
         }
     }
 
@@ -91,20 +76,13 @@
     }
 
     button {
-        display: inline-block;
-        width: 100%;
-        padding: 1em;
-        border: none;
         background-color: transparent;
         text-align: right;
-
         border: 1px solid transparent;
-
         font-size: inherit;
         color: inherit;
-        position: relative;
+
         &::after {
-            position: absolute;
             bottom: 2px;
             left: 2px;
             right: 2px;

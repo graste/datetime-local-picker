@@ -1,3 +1,37 @@
+@mixin calendar-layout {
+    .calendar__header {
+        .month,
+        .year {
+            display: inline-block;
+            width: 50%;
+        }
+
+        button,
+        span {
+            display: inline-block;
+        }
+
+        button {
+            width: 25%;
+        }
+
+        span {
+            width: 50%;
+        }
+    }
+
+    button {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        padding: 1em;
+
+        &::after {
+            position: absolute;
+        }
+    }
+}
+
 @mixin calendar-table-layout {
     display: inline-block;
 
