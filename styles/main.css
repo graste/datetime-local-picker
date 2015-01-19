@@ -11,10 +11,6 @@ body {
       padding: 0;
       margin: 0; } }
 
-.is-invalid {
-  border: 2px solid red;
-  background-color: #fcc; }
-
 .dtp {
   display: inline-block; }
 
@@ -34,12 +30,21 @@ body {
   .calendars__footer .select-current {
     width: 75%;
     text-align: right; }
+    .calendars__footer .select-current .min {
+      display: inline; }
+    .calendars__footer .select-current .short,
+    .calendars__footer .select-current .long {
+      display: none; }
 
 .datepicker {
   display: none; }
 
 .datepicker.is-visible {
   display: block; }
+
+.is-invalid {
+  border: 2px solid red;
+  background-color: #fcc; }
 
 .calendar {
   background-color: white;
@@ -69,7 +74,7 @@ body {
   .calendar .day:not(.day--disabled):hover {
     background-color: #ccc; }
     .calendar .day:not(.day--disabled):hover button::after {
-      content: "hover"; }
+      content: attr(data-hint-hover); }
   .calendar .weekday,
   .calendar .calendar-week,
   .calendar .day--excess {
@@ -81,17 +86,17 @@ body {
     .calendar .day--today button {
       border-color: #77f; }
     .calendar .day--today button::after {
-      content: "today"; }
+      content: attr(data-hint-today); }
   .calendar .day--current {
     color: #070; }
     .calendar .day--current button {
       border-color: #7c7; }
     .calendar .day--current button::after {
-      content: "current"; }
+      content: attr(data-hint-current); }
   .calendar .day--selected button {
     border-color: #f77; }
   .calendar .day--selected button::after {
-    content: "selected";
+    content: attr(data-hint-selectable);
     color: #f77; }
   .calendar .day--disabled {
     color: #c77; }
@@ -126,11 +131,11 @@ body {
     display: table-row; }
   .calendar .day {
     display: table-cell; }
+  .calendar .day .min {
+    display: inline; }
   .calendar .day .short,
   .calendar .day .long {
     display: none; }
-  .calendar .day .min {
-    display: inline; }
   .calendar .calendar-week {
     border-bottom: none; }
     .calendar .calendar-week .min {
@@ -184,14 +189,16 @@ body {
     display: table-row; }
   .calendar--table .calendar .day {
     display: table-cell; }
+  .calendar--table .calendar .day .min {
+    display: inline; }
   .calendar--table .calendar .day .short,
   .calendar--table .calendar .day .long {
     display: none; }
-  .calendar--table .calendar .day .min {
-    display: inline; }
   .calendar--table .calendar .calendar-week {
     border-bottom: none; }
     .calendar--table .calendar .calendar-week .min {
       display: inline; }
     .calendar--table .calendar .calendar-week .long {
       display: none; }
+
+/*# sourceMappingURL=main.css.map */

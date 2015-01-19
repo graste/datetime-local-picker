@@ -42,7 +42,7 @@
     .day:not(.day--disabled):hover {
         background-color: #ccc;
         button::after {
-            content: "hover";
+            content: attr(data-hint-hover);
         }
     }
 
@@ -62,7 +62,7 @@
             border-color: #77f;
         }
         button::after {
-            content: "today";
+            content: attr(data-hint-today);
         }
     }
 
@@ -72,7 +72,7 @@
             border-color: #7c7;
         }
         button::after {
-            content: "current";
+            content: attr(data-hint-current);
         }
     }
 
@@ -81,7 +81,7 @@
             border-color: #f77;
         }
         button::after {
-            content: "selected";
+            content: attr(data-hint-selectable);
             color: #f77;
         }
     }

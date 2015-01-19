@@ -23,12 +23,26 @@
     .select-current {
         width: 75%;
         text-align: right;
+
+        .min {
+            display: inline;
+        }
+        .short,
+        .long {
+            display: none;
+        }
     }
 }
 
 .datepicker {
     display: none;
 }
+
 .datepicker.is-visible {
     display: block;
+}
+
+.is-invalid {
+    border: 2px solid red;
+    background-color: #fcc;
 }

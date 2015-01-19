@@ -1,19 +1,18 @@
 <div class="<%- settings.cssClasses.calendars %> <%- css %>" data-nom="<%- numberOfMonths %>">
-    <div class="<%- settings.cssClasses.calendarsHeader %>">
-    </div>
+    <div class="<%- settings.cssClasses.calendarsHeader %>"></div>
     <div class="<%- settings.cssClasses.calendarsBody %>">
         <% _.forEach(calendars, function(calendar) { %>
-        <div class="<%- settings.cssClasses.calendar %>">
+        <div class="<%- settings.cssClasses.calendar %>" data-month="<%- date.toISOString("YYYYMM") %>">
             <div class="<%- settings.cssClasses.calendarHeader %>">
                 <div class="month">
-                    <button class="<%- settings.cssClasses.gotoPrevMonth %>" title="<%- i18n.gotoPrevMonthTitle %>">&lt;</button><!--
+                    <button type="button" class="<%- settings.cssClasses.gotoPrevMonth %>" title="<%- i18n.gotoPrevMonthTitle %>">&lt;</button><!--
                     --><span class="month-title"><%- calendar.header.month %></span><!--
-                    --><button class="<%- settings.cssClasses.gotoNextMonth %>" title="<%- i18n.gotoNextMonthTitle %>">&gt;</button>
+                    --><button type="button" class="<%- settings.cssClasses.gotoNextMonth %>" title="<%- i18n.gotoNextMonthTitle %>">&gt;</button>
                 </div><!--
                 --><div class="year">
-                    <button class="<%- settings.cssClasses.gotoPrevYear %>" title="<%- i18n.gotoPrevYearTitle %>">&lt;</button><!--
+                    <button type="button" class="<%- settings.cssClasses.gotoPrevYear %>" title="<%- i18n.gotoPrevYearTitle %>">&lt;</button><!--
                     --><span class="year-title"><%- calendar.header.year %></span><!--
-                    --><button class="<%- settings.cssClasses.gotoNextYear %>" title="<%- i18n.gotoNextYearTitle %>">&gt;</button>
+                    --><button type="button" class="<%- settings.cssClasses.gotoNextYear %>" title="<%- i18n.gotoNextYearTitle %>">&gt;</button>
                 </div>
             </div>
             <div class="<%- settings.cssClasses.calendarBody %>">
@@ -34,7 +33,13 @@
                         </div>
                         <% _.forEach(week.days, function(day) { %>
                         <div class="<%- day.css %>" data-ymd="<%- day.ymd %>" data-iso-date="<%- day.isoDate %>">
-                            <button type="button" class="set-day" title="<%- day.date.format('dddd, LL') %>">
+                            <button type="button" class="set-day"
+                                title="<%- day.date.format('dddd, LL') %>"
+                                data-hint-today="<%- i18n.hintToday %>"
+                                data-hint-current="<%- i18n.hintCurrent %>"
+                                data-hint-selectable="<%- i18n.hintSelectable %>"
+                                data-hint-hover="<%- i18n.hintHover %>"
+                            >
                                 <abbr class="min" title="<%- day.date.format('dddd, LL') %>"><%- day.date.date() %></abbr>
                                 <abbr class="short" title="<%- day.date.format('dddd, LL') %>"><%- day.date.format("L") %></abbr>
                                 <span class="long"><%- day.date.format("dddd, LL") %></span>
@@ -51,6 +56,10 @@
     </div>
     <div class="<%- settings.cssClasses.calendarsFooter %>">
         <button type="button" class="<%- settings.cssClasses.selectToday %>"><%- i18n.selectToday %></button><!--
-        --><button type="button" class="<%- settings.cssClasses.selectCurrent %>"><% if (currentDate) print(currentDate.format("LLLL")) %></button>
+        --><button type="button" class="<%- settings.cssClasses.selectCurrent %>"><%- i18n.selectCurrent %>:
+        <abbr class="min" title="<% if (currentDate) print(currentDate.format('LLLL')) %>"><% if (currentDate) print(currentDate.format("L")) %></abbr>
+            <abbr class="short" title="<% if (currentDate) print(currentDate.format('LLLL')) %>"><% if (currentDate) print(currentDate.format("dddd, LL")) %></abbr>
+            <span class="long"><% if (currentDate) print(currentDate.format("LLLL")) %></span>
+    </button>
     </div>
 </div>

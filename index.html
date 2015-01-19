@@ -16,13 +16,12 @@
     <label for="publishDate" class="dtp__label">Publish date:</label>
     <input type="text"
         name="publishDate"
-        value="2015-01-15T12:42:23.789+00:00"
+        value="2015-01-18T12:42:23.789+00:00"
         class="dtp__output"
         id="publishDate"
     >
-    <button class="dtp__trigger" id="publishDateTrigger">trigger</button>
+    <button class="dtp__trigger" id="publishDateToggle">toggle</button>
 </div>
-<div id="output"></div>
 
 <!--
 <div>
@@ -68,10 +67,10 @@ require([
 
     var picker = new dtlp({
         inputElement: '#publishDate',
-        triggerElement: '#publishDateTrigger',
+        toggleElement: '#publishDateToggle',
         locale: $('html').attr('lang'),
         direction: $('html').attr('dir'),
-        hideOnSet: true,
+        hideOnSet: false,
         minWeeksPerMonth: 6,
         //numberOfMonths: -2,
         /*numberOfMonths: {
@@ -83,6 +82,16 @@ require([
             maxDate: '2030-05-14T13:59:59.999'
         },
         disableWeekends: true,
+        disabledDates: [
+            new Date('2015-01-20'),
+            '2015-01-27',
+            function (date) {
+                if (date.date()%4 === 0) {
+                    return true;
+                }
+                return false;
+            }
+        ],
         templates: {
             calendars: calendars_tmpl
         },

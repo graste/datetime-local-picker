@@ -95,14 +95,15 @@
     @include calendar-table-layout;
 
     .day {
+        .min {
+            display: inline;
+        }
+
         .short,
         .long {
             display: none;
         }
 
-        .min {
-            display: inline;
-        }
     }
 
     .calendar-week {
@@ -116,4 +117,5 @@
             display: none;
         }
     }
+
 }

@@ -20,9 +20,8 @@
     var default_settings = {
         inputElement: null,
         outputElement: null,
-        triggerElement: null,
+        toggleElement: null,
         pickerElement: null,
-        pickerContentElement: null,
         utcOffsetElement: null,
 
         locale: 'en',
@@ -89,7 +88,7 @@
         },
 
         disableWeekends: false,
-        //disabledDates: [],
+        disabledDates: [],
 
         onBeforeShow: null,
         onBeforeHide: null,
@@ -110,6 +109,11 @@
 
         //cssPrefix: 'dtlp-',
         cssClasses: {
+            displayMode: {
+                table: 'calendar--table',
+                list: 'calendar--list'
+            },
+
             dayName: 'weekday',
             weekend: 'weekend',
             week: 'week',
@@ -156,27 +160,40 @@
         i18n: {
             de: {
                 selectToday: 'Heute',
+                selectCurrent: 'Aktuell',
                 prevMonth: 'vorheriger Monat',
                 nextMonth: 'nächster Monat',
                 week: 'Kalenderwoche',
                 gotoPrevMonthTitle: 'vorherigen Monat anzeigen',
                 gotoNextMonthTitle: 'nächsten Monat anzeigen',
                 gotoPrevYearTitle: 'ein Jahr zurück',
-                gotoNextYearTitle: 'ein Jahr vorwärts'
+                gotoNextYearTitle: 'ein Jahr vorwärts',
+                hintToday: 'heute',
+                hintCurrent: 'aktuell',
+                hintSelectable: 'wählen',
+                hintHover: 'hover'
             },
             en: {
                 selectToday: 'select today',
+                selectCurrent: 'select current',
                 prevMonth: 'previous month',
                 nextMonth: 'next month',
                 week: 'Calendar Week',
                 gotoPrevMonthTitle: 'show previous month',
                 gotoNextMonthTitle: 'show next month',
                 gotoPrevYearTitle: 'jump back one year',
-                gotoNextYearTitle: 'jump forward one year'
+                gotoNextYearTitle: 'jump forward one year',
+                hintToday: 'today',
+                hintCurrent: 'current',
+                hintSelectable: 'select',
+                hintHover: 'hover'
             }
         },
 
-        displayModes: ['calendar--table', 'calendar--list'],
+        displayModeMap: {
+            table: 'table',
+            block: 'list'
+        }/*,
 
         // from here on: TBD
 
@@ -220,6 +237,7 @@
         showMonthAfterYear: false,
         htmlAttributes: {
         }
+*/
     };
 
     function getRandomString() {
@@ -247,27 +265,29 @@
         };
 
         var settings = {};
-        updateSettings(instance_settings || {});
+        prepareSettings(instance_settings || {});
 
         // TODO validate given HTML elements or selector strings
 
         var $elements = {
-            input: null,
-            picker: null,
             content: null,
-            trigger: null,
-            output: null
+            input: null,
+            output: null,
+            picker: null,
+            toggle: null
         };
-        updateElements();
+        prepareElements();
 
+        // read initial date from input element and highlight it invalid if necessary
         var initial_value = $elements.input.val();
         var initial_moment = parseDate(initial_value);
         if (isValidDate(initial_moment)) {
             setDate(initial_moment);
+            $elements.input.removeClass(settings.cssClasses.inputInvalid);
         } else {
-            var initial_select_moment = moment();
-            initial_select_moment.locale(settings.locale);
-            selectDate(initial_select_moment);
+            $elements.input.addClass(settings.cssClasses.inputInvalid);
+            // without valid initial date use today as the initially selected date
+            selectDate(parseDate());
         }
 
         if (settings.debug) { console.log('settings', settings); }
@@ -275,19 +295,19 @@
         // return public api
         return {
             getCurrentDate: function() {
-                return moment(getCurrentDate());
+                return getCurrentDate().clone();
             },
             getCurrentElement: function() {
-                return getDayElement(getCurrentDate());
+                return getVisibleDayElement(getCurrentDate());
             },
             getInputElement: function() {
                 return $elements.input;
             },
             getMinDate: function() {
-                return moment(settings.constraints.minDate);
+                return settings.constraints.minDate.clone();
             },
             getMaxDate: function() {
-                return moment(settings.constraints.maxDate);
+                return settings.constraints.maxDate.clone();
             },
             getOutputElement: function() {
                 return $elements.output;
@@ -298,14 +318,14 @@
             getPickerElement: function() {
                 return $elements.picker;
             },
-            getTriggerElement: function() {
-                return $elements.trigger;
+            getToggleElement: function() {
+                return $elements.toggle;
             },
             getSelectedDate: function() {
-                return moment(getSelectedDate());
+                return getSelectedDate().clone();
             },
             getSelectedElement: function() {
-                return getDayElement(getSelectedDate());
+                return getVisibleDayElement(getSelectedDate());
             },
             getSettings: function() {
                 return _.cloneDeep(settings, cloneSpecialValues);
@@ -346,8 +366,13 @@
                 }
                 return this;
             },
-            addClass: function(css) {
-                $elements.picker.addClass(css);
+            setDisplayMode: function(name) {
+                if (_.has(settings.cssClasses.displayMode, name)) {
+                    _.forIn(settings.cssClasses.displayMode, function(value, key, object) {
+                        $elements.picker.removeClass(value);
+                    });
+                    $elements.picker.addClass(settings.cssClasses.displayMode[name]);
+                }
                 return this;
             },
             setNumberOfMonths: function(nom) {
@@ -362,8 +387,8 @@
                 unbindEventHandlers();
                 return this;
             },
-            redraw: function() {
-                redraw();
+            draw: function() {
+                draw();
                 return this;
             },
             show: function() {
@@ -441,15 +466,15 @@
                 if (settings.debug) { console.log('output element value: ' + $elements.output_element.val()); }
             });
 
-            $elements.trigger.on('click.' + settings.logPrefix, function(ev) {
+            $elements.toggle.on('click.' + settings.logPrefix, function(ev) {
                 togglePicker();
                 focusSelectedDate();
             });
         }
 
         function unbindEventHandlers() {
-            if (!_.isNull($elements.trigger)) {
-                $elements.trigger.off('.' + settings.logPrefix);
+            if (!_.isNull($elements.toggle)) {
+                $elements.toggle.off('.' + settings.logPrefix);
             }
 
             if (!_.isNull($elements.output)) {
@@ -464,8 +489,16 @@
         }
 
         function bindPickerEventHandlers() {
-            $elements.picker.on('keydown.' + settings.logPrefix, '.'+settings.cssClasses.setDay, handlePickerKeydown);
-            $elements.picker.on('click.' + settings.logPrefix, '.'+settings.cssClasses.setDay, handlePickerClick);
+            $elements.picker.on(
+                'keydown.' + settings.logPrefix,
+                'button',//, .'+settings.cssClasses.setDay,
+                handlePickerKeydown
+            );
+            $elements.picker.on(
+                'click.' + settings.logPrefix,
+                'button', //'.'+settings.cssClasses.setDay,
+                handlePickerClick
+            );
         }
 
         function unbindPickerEventHandlers() {
@@ -481,38 +514,54 @@
 
         function handlePickerClick(ev) {
             if (settings.debug) { console.log('handlePickerClick', ev); }
-            var set;
             var selected_day;
             var parsed_date;
-            var $target = $(ev.target);
+            var value;
+            var $btns;
+            var btn_index;
 
-            if ($target.hasClass(settings.cssClasses.selectToday)) {
-                selectToday();
-            } else if ($target.hasClass(settings.cssClasses.selectCurrent)) {
-                setDay(getCurrentDate());
-                updateViewOrRedraw();
-            } else if ($target.parents('.'+settings.cssClasses.calendarHeader).length > 0) {
-                //click event came from some button in the calendar header
-                if ($target.hasClass(settings.cssClasses.gotoPrevMonth)) {
-                    set = gotoPreviousSelectableDate('month');
-                } else if ($target.hasClass(settings.cssClasses.gotoNextMonth)) {
-                    set = gotoNextSelectableDate('month');
-                } else if ($target.hasClass(settings.cssClasses.gotoPrevYear)) {
-                    set = gotoPreviousSelectableDate('year');
-                } else if ($target.hasClass(settings.cssClasses.gotoNextYear)) {
-                    set = gotoNextSelectableDate('year');
+            var $button = $(ev.target).closest('button');
+            if ($button.hasClass(settings.cssClasses.selectToday)) {
+                draw(parseDate());
+                $elements.content.find('.'+settings.cssClasses.isToday+' .'+settings.cssClasses.setDay).focus();
+            } else if ($button.hasClass(settings.cssClasses.selectCurrent)) {
+                draw(getCurrentDate());
+                $elements.content.find('.'+settings.cssClasses.isCurrent+' .'+settings.cssClasses.setDay).focus();
+            } else if ($button.hasClass(settings.cssClasses.gotoPrevMonth)) {
+                btn_index = getElementIndex($button, '.'+settings.cssClasses.gotoPrevMonth);
+                value = $button.closest('.'+settings.cssClasses.calendar).attr('data-month');
+                if (value) {
+                    draw(parseDate(value).subtract(1, 'month'));
+                    focusElementIndex('.'+settings.cssClasses.gotoPrevMonth, btn_index);
                 }
-
-                if (set) {
-                    updateViewOrRedraw();
+            } else if ($button.hasClass(settings.cssClasses.gotoNextMonth)) {
+                btn_index = getElementIndex($button, '.'+settings.cssClasses.gotoNextMonth);
+                value = $button.closest('.'+settings.cssClasses.calendar).attr('data-month');
+                if (value) {
+                    draw(parseDate(value).add(1, 'month'));
+                    $elements.content.find('.'+settings.cssClasses.gotoNextMonth)[btn_index].focus();
+                    focusElementIndex('.'+settings.cssClasses.gotoNextMonth, btn_index);
                 }
-            } else {
-                // button.set-day
-                // probably a click on a day button; is there a day cell involved?
-                selected_day = $target.parents('[data-iso-date]');
-                if (selected_day.length > 0) {
-                    parsed_date = parseDate(selected_day.attr('data-iso-date'));
-                    if (setDay(parsed_date)) {
+            } else if ($button.hasClass(settings.cssClasses.gotoPrevYear)) {
+                btn_index = getElementIndex($button, '.'+settings.cssClasses.gotoPrevYear);
+                value = $button.closest('.'+settings.cssClasses.calendar).attr('data-month');
+                if (value) {
+                    draw(parseDate(value).subtract(1, 'year'));
+                    $elements.content.find('.'+settings.cssClasses.gotoPrevYear)[btn_index].focus();
+                    focusElementIndex('.'+settings.cssClasses.gotoPrevYear, btn_index);
+                }
+            } else if ($button.hasClass(settings.cssClasses.gotoNextYear)) {
+                btn_index = getElementIndex($button, '.'+settings.cssClasses.gotoNextYear);
+                value = $button.closest('.'+settings.cssClasses.calendar).attr('data-month');
+                if (value) {
+                    draw(parseDate(value).add(1, 'year'));
+                    focusElementIndex('.'+settings.cssClasses.gotoNextYear, btn_index);
+                }
+            } else if ($button.hasClass(settings.cssClasses.setDay)) {
+                var $day = $button.closest('.'+settings.cssClasses.day);
+                if ($day.length > 0) {
+                    parsed_date = parseDate($day.attr('data-iso-date'));
+                    if (!$day.hasClass(settings.cssClasses.isDisabled) && setDay(parsed_date)) {
                         if (settings.hideOnSet) {
                             hidePicker();
                             $elements.input.focus();
@@ -520,19 +569,27 @@
                             updateViewOrRedraw();
                         }
                     }
-                } else {
-                    if (settings.debug) { console.log('click on something that is not in a .day'); }
                 }
+            } else {
+                if (settings.debug) { console.log('Unhandled click on something.', $(ev.target)); }
             }
         }
 
         function getDisplayMode(date) {
+            var value = 'unknown';
+
             var $selected_day = getDayElement(date);
-            var value = $selected_day.closest('.'+settings.cssClasses.calendarBody).css('display');
-            if (settings.displayModes.indexOf(value) !== -1) {
-                return settings.displayModes[value];
+            if ($selected_day.length > 0) {
+                value = $selected_day.closest('.'+settings.cssClasses.calendarBody).css('display');
+            } else {
+                value = $elements.content.find('.'+settings.cssClasses.calendarBody).first().css('display');
             }
-            return 'table';
+
+            if (value && _.has(settings.displayModeMap, value)) {
+                return settings.displayModeMap[value];
+            }
+
+            return value;
         }
 
         function handlePickerKeydown(ev) {
@@ -541,48 +598,61 @@
                 return;
             }
 
-            var display_mode = getDisplayMode(getSelectedDate());
+            var selected_date = getSelectedDate();
+            if (!selected_date) {
+                //check if document.activeElement is a button.set-day and set that as selected date
+                var value = $elements.content.find('.'+settings.cssClasses.setDay+':focus').closest('.'+settings.cssClasses.day).attr('data-iso-date');
+                var date = parseDate(value);
+                if (date.isValid()) {
+                    selected_date = date;
+                }
+            }
+
+            var display_mode = selected_date ? getDisplayMode(selected_date) : 'table';
             if (settings.debug) { console.log('display_mode='+display_mode); }
 
             switch (ev.keyCode) {
                 case 37: // left
-                    if (settings.debug) { console.log('LEFT'); }
                     ev.preventDefault(); // prevent viewport scrolling
-                    if (display_mode === 'table' && gotoPreviousSelectableDate('day')) {
-                        updateViewOrRedraw();
-                    } else if (display_mode === 'list' && gotoPreviousSelectableDate('month')) {
-                        updateViewOrRedraw();
+                    if (display_mode === 'table') {
+                        if (gotoPreviousSelectableDate(selected_date, 'day')) {
+                            updateViewOrRedraw();
+                        }
+                    } else if (display_mode === 'list') {
+                        if (gotoPreviousSelectableDate(selected_date, 'day')) {
+                            updateViewOrRedraw();
+                        }
                     }
                     break;
                 case 39: // right
-                    if (settings.debug) { console.log('RIGHT'); }
                     ev.preventDefault(); // prevent viewport scrolling
-                    if (display_mode === 'table' && gotoNextSelectableDate('day')) {
+                    if (display_mode === 'table' && gotoNextSelectableDate(selected_date, 'day')) {
                         updateViewOrRedraw();
-                    } else if (display_mode === 'list' && gotoNextSelectableDate('month')) {
+                    } else if (display_mode === 'list' && gotoNextSelectableDate(selected_date, 'day')) {
                         updateViewOrRedraw();
                     }
                     break;
                 case 38: // up
-                    if (settings.debug) { console.log('UP'); }
                     ev.preventDefault(); // prevent viewport scrolling
-                    if (display_mode === 'table' && gotoPreviousSelectableDate('week')) {
-                        updateViewOrRedraw();
-                    } else if (display_mode === 'list' && gotoPreviousSelectableDate('day')) {
-                        updateViewOrRedraw();
+                    if (display_mode === 'table') {
+                        if (gotoPreviousSelectableDate(selected_date, 'week')) {
+                            updateViewOrRedraw();
+                        }
+                    } else if (display_mode === 'list') {
+                        if (gotoPreviousSelectableDate(selected_date, 'day')) {
+                            updateViewOrRedraw();
+                        }
                     }
                     break;
                 case 40: // down
-                    if (settings.debug) { console.log('DOWN'); }
                     ev.preventDefault(); // prevent viewport scrolling
-                    if (display_mode === 'table' && gotoNextSelectableDate('week')) {
+                    if (display_mode === 'table' && gotoNextSelectableDate(selected_date, 'week')) {
                         updateViewOrRedraw();
-                    } else if (display_mode === 'list' && gotoNextSelectableDate('day')) {
+                    } else if (display_mode === 'list' && gotoNextSelectableDate(selected_date, 'day')) {
                         updateViewOrRedraw();
                     }
                     break;
                 case 27: // escape
-                    if (settings.debug) { console.log('ESCAPE'); }
                     ev.preventDefault();
                     hidePicker();
                     $elements.input.focus();
@@ -603,18 +673,20 @@
 
         function handleInputElementKeydown(ev) {
             if (ev.keyCode === 13) { // enter
-                if (settings.debug) { console.log('RETURN'); }
                 ev.preventDefault(); // otherwise the focusSelectedDate() would close the dialog again ;-)
                 togglePicker();
                 focusSelectedDate();
             } else if (ev.keyCode === 27) {
-                if (settings.debug) { console.log('ESCAPE'); }
                 if (isVisible()) {
                     hidePicker();
                 } else {
                     var parsed_date = parseDate($elements.input.val());
+                    console.log(parsed_date.toISOString());
                     if (!isValidDate(parsed_date)) {
-                        resetInputElementDate();
+                        parsed_date = parseDate($elements.output.val());
+                        if (isValidDate(parsed_date)) {
+                            resetInputElementDate(parsed_date);
+                        }
                     }
                 }
             }
@@ -629,19 +701,19 @@
         }
 
         function updateViewOrRedraw() {
-            if ($elements.content.find("[data-ymd='"+getYMD(getSelectedDate())+"']").length < 1) {
-                redraw();
-            } else {
-                updateView();
-            }
-        }
+            highlightInputElement();
 
-        function redraw() {
-            if (isVisible()) {
-                showPicker();
-            } else {
-                hidePicker();
+            if (!isVisible()) {
+                return false;
             }
+
+            if (!hasVisibleDayElement(getSelectedDate())) {
+                draw();
+            }
+
+            updateView();
+
+            return true;
         }
 
         function updateView() {
@@ -651,22 +723,39 @@
             highlightInputElement();
         }
 
+        function fitViewport() {
+            var $calendar = $elements.content.find("."+settings.cssClasses.calendar);
+            $elements.content.css("font-size", "");
+
+            var ratio = screen.availWidth / $calendar.width();
+            var font_size = parseInt($elements.content.css("font-size"), 10);
+
+            if (settings.debug) { console.log('font_size=' + font_size, 'calendar_width=' + $calendar.width()); }
+
+            if (ratio < 1) {
+                font_size *= ratio;
+                $elements.content.css("font-size", font_size+"px");
+            }
+
+            if (settings.debug) { console.log('screen.availWidth=' + screen.availWidth, 'ratio=' + ratio); }
+        }
+
         function createEvent(event_name, event_data) {
             event_name = event_name || 'unnamed';
             event_data = event_data || {};
 
             var default_event = {
                 name: event_name,
-                currentDate: moment(getCurrentDate()),
-                selectedDate: moment(getSelectedDate()),
+                currentDate: parseDate(getCurrentDate()),
+                selectedDate: parseDate(getSelectedDate()),
                 isVisible: isVisible()
             };
 
             return _.merge(default_event, event_data);
         }
 
-        function gotoPreviousSelectableDate(period) {
-            var prev = moment(getSelectedDate());
+        function gotoPreviousSelectableDate(prev, period) {
+            prev = parseDate(prev);
             period = period || 'day';
             do {
                 // TODO decrease jump period unit if necessary?
@@ -684,8 +773,8 @@
             return false;
         }
 
-        function gotoNextSelectableDate(period) {
-            var next = moment(getSelectedDate());
+        function gotoNextSelectableDate(next, period) {
+            next = parseDate(next);
             period = period || 'day';
             do {
                 // TODO decrease jump period unit if necessary?
@@ -719,7 +808,6 @@
             unbindPickerEventHandlers();
             draw();
             bindPickerEventHandlers();
-            updateView();
             $elements.picker.addClass(settings.cssClasses.isVisible);
             setVisible(true);
             if (_.isFunction(settings.onShow)) {
@@ -748,15 +836,18 @@
         }
 
         function highlightToday() {
-            var ymd = getYMD(moment());
+            var ymd = getYMD(parseDate());
             $elements.content.find('.'+settings.cssClasses.isToday).removeClass(settings.cssClasses.isToday);
             $elements.content.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isToday);
         }
 
         function highlightCurrentDate() {
-            var ymd = getYMD(getCurrentDate());
-            $elements.content.find('.'+settings.cssClasses.isCurrent).removeClass(settings.cssClasses.isCurrent);
-            $elements.content.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isCurrent);
+            var date = getCurrentDate();
+            if (date) {
+                var ymd = getYMD(date);
+                $elements.content.find('.'+settings.cssClasses.isCurrent).removeClass(settings.cssClasses.isCurrent);
+                $elements.content.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isCurrent);
+            }
         }
 
         function blurSelectedDate() {
@@ -765,20 +856,44 @@
 
         function focusSelectedDate() {
             blurSelectedDate();
-            var ymd = getYMD(getSelectedDate());
-            var $elm = getDayElement(getSelectedDate());
-            $elements.content.find("[data-ymd='"+ymd+"']").addClass(settings.cssClasses.isSelected);
-            $elm.find('.'+settings.cssClasses.setDay).focus();
+
+            var parsed_date;
+            var date = getSelectedDate();
+
+            if (!date) {
+                if (settings.debug) { console.log('Invalid selected date to focus.'); }
+                return false;
+            }
+
+            var $day = getVisibleDayElement(date);
+            if ($day.length === 0) {
+                var $selected = $elements.content.find('.'+settings.cssClasses.isSelected);
+                var $current = $elements.content.find('.'+settings.cssClasses.isCurrent);
+                var $today = $elements.content.find('.'+settings.cssClasses.isToday);
+                var $days = $elements.content.find('.'+settings.cssClasses.day);
+                if ($selected.length > 0) {
+                    var parsed_date = parseDate($selected.attr('data-iso-date'));
+                    if (parsed_date.isValid()) {
+                        if (selectDay(parsed_date)) {
+                            $selected.addClass(settings.cssClasses.isSelected).focus();
+                        }
+                    }
+                } else if ($current.length > 0 && (parsed_date = parseDate($current.attr('data-iso-date'))) && parsed_date.isValid() && selectDay(parsed_date)) {
+                    $current.first().addClass(settings.cssClasses.isSelected).focus();
+                } else if ($today.length > 0 && (parsed_date = parseDate($today.attr('data-iso-date'))) && parsed_date.isValid() && selectDay(parsed_date)) {
+                    $today.first().addClass(settings.cssClasses.isSelected).focus();
+                } else if ($days.length > 0 && (parsed_date = parseDate($days.attr('data-iso-date'))) && parsed_date.isValid() && selectDay(parsed_date)) {
+                    $days.first().addClass(settings.cssClasses.isSelected).focus();
+                } else {
+                    console.log('idkwtd');
+                }
+            } else {
+                $day.first().addClass(settings.cssClasses.isSelected).find('.'+settings.cssClasses.setDay).first().focus();
+            }
         }
 
         function selectToday() {
-            if (selectDay(moment())) {
-                updateViewOrRedraw();
-                return true;
-            } else {
-                if (settings.debug) { console.log('Seems today is not a valid date?'); }
-            }
-            return false;
+            return selectDay(parseDate());
         }
 
         function setDay(date) {
@@ -796,6 +911,7 @@
             if (isValidDate(parsed_date)) {
                 setSelectedDate(parsed_date);
                 setCurrentDate(parsed_date);
+                return true;
             }
             return false;
         }
@@ -816,7 +932,7 @@
         function setSelectedDate(date) {
             if (isValidDate(date)) {
                 if (settings.debug) { console.log('selectedDate is now: '+date.toISOString()); }
-                state.selectedDate = moment(date);
+                state.selectedDate = date.clone();
                 if (_.isFunction(settings.onSetSelectedDate)) {
                     _.defer(settings.onSetSelectedDate, createEvent('setSelectedDate'));
                 }
@@ -828,7 +944,7 @@
         function setCurrentDate(date) {
             if (isValidDate(date)) {
                 if (settings.debug) { console.log('currentDate is now: '+date.toISOString()); }
-                state.currentDate = moment(date);
+                state.currentDate = date.clone();
                 setOutputElementDate(date);
                 setInputElementDate(date);
                 if (_.isFunction(settings.onSetCurrentDate)) {
@@ -851,30 +967,40 @@
         }
 
         function getYMD(date) {
+            return date.format('YYYYMMDD');
             if (!moment.isMoment(date)) {
                 console.error('Only valid moment instances are allowed for getYMD, given was:', date);
-                return 'fail';
+                throw new Error('Only valid moment instances are allowed for getYMD');
             }
-            return date.format('YYYYMMDD');
         }
 
         function getDayElement(date) {
-            var days = $elements.content.find('[data-ymd="'+getYMD(date)+'"]'); // could be excess days in multiple calendars
-            if (days.length === 0) {
-                return false;
-            } else if (days.length > 1) {
+            // TODO add setting to allow selection of excess dates?
+            var $days = $elements.content.find('[data-ymd="'+getYMD(date)+'"]'); // could be excess days in multiple calendars
+            if ($days.length > 1) {
                 // prefer the calendar where that day is part of the actual month
-                var elm = days.not('.'+settings.cssClasses.dayExcess);
-                if (elm.length > 0) {
-                    return elm.first();
+                var $day = $days.not('.'+settings.cssClasses.dayExcess);
+                if ($day.length > 0) {
+                    return $day.first();
                 }
             }
-
-            return days.first();
+            return $days.first();
         }
 
-        function hasDayElement(date) {
-            return $elements.content.has('[data-ymd="'+getYMD(date)+'"]');
+        function getVisibleDayElement(date) {
+            var $days = $elements.content.find('[data-ymd="'+getYMD(date)+'"]').filter(':visible');
+            if ($days.length > 1) {
+                // prefer the calendar where that day is part of the actual month
+                var $day = $days.not('.'+settings.cssClasses.dayExcess);
+                if ($day.length > 0) {
+                    return $day.first();
+                }
+            }
+            return $days.first();
+        }
+
+        function hasVisibleDayElement(date) {
+            return $elements.content.find('[data-ymd="'+getYMD(date)+'"]').filter(':visible').length > 0;
         }
 
         function setVisible(flag) {
@@ -882,39 +1008,25 @@
             return flag;
         }
 
-        function isVisibleDay(date) {
-            if (date && moment.isMoment(date) && $elements.content.has('[data-ymd="'+getYMD(date)+'"]')) {
-                return true;
-            }
-            return false;
-        }
-
-        function isSelectableDay(date) {
-            if (isValidDate(date) && $elements.content.has('[data-ymd="'+getYMD(date)+'"]')) {
-                return true;
-            }
-            return false;
-        }
-
         function isVisible() {
             return state.isVisible;
         }
 
-        function isWeekend(valid_moment) {
-            var m = moment(valid_moment).locale(settings.locale);
-            return (settings.weekendDays.indexOf(m.day()) !== -1);
+        function isWeekend(date) {
+            var parsed_date = parseDate(date);
+            return (settings.weekendDays.indexOf(parsed_date.day()) !== -1);
         }
 
-        function setOutputElementDate(valid_moment) {
+        function setOutputElementDate(date) {
             $elements.output.val(
-                //moment(valid_moment).utc().format(settings.outputFormat)
-                moment(valid_moment).toISOString()
+                //parseDate(date).utc().format(settings.outputFormat)
+                parseDate(date).toISOString()
             );
         }
 
-        function setInputElementDate(valid_moment) {
+        function setInputElementDate(date) {
             $elements.input.val(
-                moment(valid_moment).local().format(settings.displayFormat)
+                parseDate(date).local().format(settings.displayFormat)
             );
         }
 
@@ -926,42 +1038,50 @@
                 $elements.input.removeClass(settings.cssClasses.inputInvalid);
             } else {
                 $elements.input.addClass(settings.cssClasses.inputInvalid);
-                throw new Error('Output element contains an invalid moment: ' + m);
+                //throw new Error('Output element contains an invalid moment: ' + parsed_date);
             }
         }
 
-        function draw() {
-            var template_data = prepareCalendars();
+        function getElementIndex($element, selector) {
+            var $elms = $elements.content.find(selector);
+            var elm_index = 0;
+            $elms.each(function(idx, item) {
+                if (item === $element[0]) {
+                    elm_index = idx;
+                }
+            });
+            return elm_index;
+        }
+
+        function focusElementIndex(selector, index) {
+            index = index || 0;
+            var $elms = $elements.content.find(selector);
+            if ($elms.length > index) {
+                $elms[index].focus();
+            } else {
+                $elms.first().focus();
+            }
+        }
+
+        function draw(date) {
+            date = date || getSelectedDate() || getCurrentDate();
+            var template_data = prepareCalendars(date);
             $elements.content.html(
                 settings.templates.calendars(template_data)
             );
-
+            updateView();
             fitViewport();
         }
 
-        function fitViewport() {
-            var $calendar = $elements.content.find("."+settings.cssClasses.calendar);
-            $elements.content.css("font-size", "");
-
-            var ratio = screen.availWidth / $calendar.width();
-            var font_size = parseInt($elements.content.css("font-size"), 10);
-
-            if (settings.debug) { console.log('font_size=' + font_size, 'calendar_width=' + $calendar.width()); }
-
-            if (ratio < 1) {
-                font_size *= ratio;
-                $elements.content.css("font-size", font_size+"px");
+        function prepareCalendars(date) {
+            if (date && !moment.isMoment(date)) {
+                throw new Error('No valid date given to prepare template data for.');
             }
 
-            if (settings.debug) { console.log('screen.availWidth=' + screen.availWidth, 'ratio=' + ratio); }
-        }
+            // when no date is given use today's date to prepare template data
+            date = date || parseDate();
 
-        function prepareCalendars(date) {
             var idx;
-
-            // TODO use current date when selected date is far away and reopening picker wouldn't show the current date?
-            date = getSelectedDate() || getCurrentDate();
-
             var nom = settings.numberOfMonths.before + settings.numberOfMonths.after + 1;
 
             var css = settings.cssClasses.calendarsSingle;
@@ -971,9 +1091,10 @@
 
             var calendar_data = {
                 settings: settings,
+                date: parseDate(date),
                 localeData: date.localeData(),
-                currentDate: getCurrentDate(),
-                selectedDate: getSelectedDate(),
+                currentDate: parseDate(getCurrentDate()),
+                selectedDate: parseDate(getSelectedDate()),
                 i18n: settings.i18n[settings.locale] || 'en',
                 css: css,
                 numberOfMonths: nom,
@@ -982,7 +1103,7 @@
 
             // render N previous months
             for (idx = settings.numberOfMonths.before; idx > 0; idx--) {
-                calendar_data.calendars.push(prepareCalendarMonth(moment(date).subtract(idx, 'months')));
+                calendar_data.calendars.push(prepareCalendarMonth(parseDate(date).subtract(idx, 'months')));
             }
 
             // render currently selected month
@@ -990,14 +1111,14 @@
 
             // render N next months
             for (idx = 1; idx <= settings.numberOfMonths.after; idx++) {
-                calendar_data.calendars.push(prepareCalendarMonth(moment(date).add(idx, 'months')));
+                calendar_data.calendars.push(prepareCalendarMonth(parseDate(date).add(idx, 'months')));
             }
 
             return calendar_data;
         }
 
         function prepareCalendarMonth(date) {
-            date = moment(date).startOf('month'); // clone just in case someone modifies the date while rendering
+            date = date.clone().startOf('month'); // clone just in case someone modifies the date while rendering
             return {
                 header: prepareHeader(date),
                 footer: prepareFooter(date),
@@ -1009,7 +1130,7 @@
 
         function prepareHeader(date) {
             var header_data = {
-                date: moment(date),
+                date: date.clone(),
                 year: date.format('YYYY'),
                 month: date.format('MMMM'),
                 content: date.format('MMMM YYYY')
@@ -1025,7 +1146,7 @@
 
         function prepareFooter(date) {
             var footer_data = {
-                date: moment(date),
+                date: date.clone(),
                 year: date.format('YYYY'),
                 month: date.format('MMMM'),
                 title: date.format('MMMM YYYY'),
@@ -1082,14 +1203,14 @@
         }
 
         function prepareWeeks(date) {
-            date = moment(date);
+            date = parseDate(date);
             var weeks_data = [];
             var days_per_week = 7;
-            var today = moment();
+            var today = parseDate();
             var days_in_month = getDaysInMonth(date);
-            var first_date_of_month = moment(date).startOf('month');
+            var first_date_of_month = date.clone().startOf('month');
             var first_week_of_month = first_date_of_month.week();
-            var last_date_of_month = moment(date).endOf('month');
+            var last_date_of_month = date.clone().endOf('month');
             var last_week_of_month = last_date_of_month.week();
 
             var num_weeks = Math.ceil(Math.abs(last_date_of_month.diff(first_date_of_month, 'weeks', true)));
@@ -1113,8 +1234,8 @@
                 console.log('days_to_render='+num_days, 'cells_to_render='+num_cells);
             }
 
-            var start_date = moment(first_date_of_month).subtract(+days_before, 'days');
-            var end_date = moment(last_date_of_month).add(days_after, 'days');
+            var start_date = first_date_of_month.clone().subtract(+days_before, 'days');
+            var end_date = last_date_of_month.clone().add(days_after, 'days');
             if (settings.debug) {
                 console.log('start=', start_date.toString());
                 console.log('  end=', end_date.toString());
@@ -1125,7 +1246,7 @@
             var day_valid = true;
             var day_data = {};
             var week_data = {};
-            var render_date = moment(start_date);
+            var render_date = start_date.clone();
             var idx;
 
             for (idx = 0; idx < num_days; idx++) {
@@ -1135,7 +1256,7 @@
                     week_data = {
                         css: settings.cssClasses.week,
                         weekNumberCSS: settings.cssClasses.weekNumber,
-                        date: moment(render_date),
+                        date: render_date.clone(),
                         num: render_date.week(),
                         nameMin: render_date.format('WW'),
                         nameLong: render_date.format('['+settings.i18n[settings.locale].week+'] W'),
@@ -1162,22 +1283,21 @@
                     day_css += ' ' + settings.cssClasses.isDisabled;
                     day_valid = false;
                 }
-                /*
+                // TODO do we need those three conditions here?
                 if (today.isSame(render_date, 'day')) {
                     day_css += ' ' + settings.cssClasses.isToday;
-                }*/
-                /*
+                }
                 if (render_date.isSame(getSelectedDate(), 'day')) {
                     day_css += ' ' + settings.cssClasses.isSelected;
                 }
                 if (render_date.isSame(getCurrentDate(), 'day')) {
                     day_css += ' ' + settings.cssClasses.isCurrent;
-                }*/
+                }
 
                 // data for one calendar day
                 day_data = {
                     css: day_css,
-                    date: moment(render_date),
+                    date: render_date.clone(),
                     isoDate: render_date.toISOString(),
                     ymd: getYMD(render_date),
                     dayValid: day_valid,
@@ -1211,8 +1331,6 @@
                 });
             }*/
 
-            if (settings.debug) { console.log('weeks_data=', weeks_data); }
-
             return weeks_data;
         }
 
@@ -1224,8 +1342,8 @@
         }
 
         function isDisabled(date) {
-            var min_date = moment(settings.constraints.minDate).subtract(1, 'millisecond');
-            var max_date = moment(settings.constraints.maxDate).add(1, 'millisecond');
+            var min_date = parseDate(settings.constraints.minDate).subtract(1, 'millisecond');
+            var max_date = parseDate(settings.constraints.maxDate).add(1, 'millisecond');
 
             if (!date.isBetween(min_date, max_date)) {
                 return true;
@@ -1235,25 +1353,22 @@
                 return true;
             }
 
-            /*
-            _.forEach(settings.disabledDates, function(value, index, collection) {
+            // check every disabledDates entry and return false if date is invalid;
+            var is_valid = _.every(settings.disabledDates, function(value, index, collection) {
                 if (_.isFunction(value)) {
-                    if (value(moment(date)) === true) {
-                        return true;
-                    }
-                } else if (value.isSame(date, 'day')) {
-                    return true;
+                    return !value(parseDate(date));
+                } else {
+                    return !(parseDate(value).isSame(date, 'day'));
                 }
             });
-            */
 
-            return false;
+            return !is_valid;
         }
 
-        function updateElements() {
+        function prepareElements() {
             var content = '';
 
-            $elements.trigger = settings.triggerElement ? $(settings.triggerElement) : null;
+            $elements.toggle = settings.toggleElement ? $(settings.toggleElement) : null;
             $elements.input = $(settings.inputElement);
 
             $elements.picker = settings.pickerElement ? $(settings.pickerElement) : null;
@@ -1269,8 +1384,8 @@
                 $elements.content.addClass(settings.cssClasses.pickerContent);
 
                 // TODO make other insert positions configurable? OTOH pickerElement can be set already
-                if ($elements.trigger) {
-                    $elements.picker.insertAfter($elements.trigger);
+                if ($elements.toggle) {
+                    $elements.picker.insertAfter($elements.toggle);
                 } else {
                     $elements.picker.insertAfter($elements.input);
                 }
@@ -1287,7 +1402,7 @@
             bindEventHandlers();
         }
 
-        function updateSettings(s) {
+        function prepareSettings(s) {
             settings = $.extend(true, {}, default_settings, s, settings);
 
             // add (randomized) log prefix to instance
@@ -1296,11 +1411,11 @@
                 settings.logPrefix += '#' + getRandomString();
             }
 
-            // use the input element as trigger element when no specific trigger was given
-            settings.triggerElement = settings.triggerElement || settings.inputElement;
+            // use the input element as toggle element when no specific toggle was given
+            settings.toggleElement = settings.toggleElement || settings.inputElement;
 
             // check for a valid given locale to use and store that in settings (as it might be invalid/unknown)
-            var m = moment();
+            var m = parseDate();
             m.locale(settings.locale);
             settings.locale = m.locale(); // actual locale being used
 
