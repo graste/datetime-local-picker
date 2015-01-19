@@ -295,6 +295,9 @@
         // return public api
         return {
             getCurrentDate: function() {
+                if (!getCurrentDate()) {
+                    return null;
+                }
                 return getCurrentDate().clone();
             },
             getCurrentElement: function() {
@@ -1284,7 +1287,6 @@
                     day_css += ' ' + settings.cssClasses.isDisabled;
                     day_valid = false;
                 }
-                // TODO do we need those three conditions here?
                 if (today.isSame(render_date, 'day')) {
                     day_css += ' ' + settings.cssClasses.isToday;
                 }
@@ -1419,6 +1421,9 @@
             var m = parseDate();
             m.locale(settings.locale);
             settings.locale = m.locale(); // actual locale being used
+            if (!_.has(settings.i18n, settings.locale)) {
+                settings.i18n[settings.locale] = settings.i18n.en;
+            }
 
             var fdow = settings.firstDayOfWeek;
             if (!_.isNull(fdow) && ((+fdow >= 0) && (+fdow <= 6))) {
