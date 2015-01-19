@@ -872,7 +872,7 @@
                 var $today = $elements.content.find('.'+settings.cssClasses.isToday);
                 var $days = $elements.content.find('.'+settings.cssClasses.day);
                 if ($selected.length > 0) {
-                    var parsed_date = parseDate($selected.attr('data-iso-date'));
+                    parsed_date = parseDate($selected.attr('data-iso-date'));
                     if (parsed_date.isValid()) {
                         if (selectDay(parsed_date)) {
                             $selected.addClass(settings.cssClasses.isSelected).focus();
