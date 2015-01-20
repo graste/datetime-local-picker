@@ -49,21 +49,38 @@
 
         inputFormats: [
             moment.ISO_8601,
+            // ISO formats
             'YYYY-MM-DD[T]HH:mm:ss.SSSZ',
             'YYYY-MM-DD[T]HH:mm:ss.SSS[Z]',
-            "YYYY-MM-DD[T]HH:mm:ssZ",
-            "YYYY-MM-DD[T]HH:mm:ss[Z]",
-            "YYYY-MM-DD",
-            "DD.MM.YYYY HH:mm:ss.SSSZ",
-            "DD.MM.YYYY HH:mm:ss.SSS",
-            "DD.MM.YYYY HH:mm:ss",
-            "DD.MM.YYYY HH:mm",
-            "DD.MM.YYYY",
-            "DD/MM/YYYY HH:mm:ss.SSSZ",
-            "DD/MM/YYYY HH:mm:ss.SSS",
-            "DD/MM/YYYY HH:mm:ss",
-            "DD/MM/YYYY HH:mm",
-            "DD/MM/YYYY"
+            'YYYY-MM-DD[T]HH:mm:ssZ',
+            'YYYY-MM-DD[T]HH:mm:ss[Z]',
+            'YYYY-MM-DD',
+            // DE style formats
+            'DD.MM.YYYY HH:mm:ss.SSSZ',
+            'DD.MM.YYYY HH:mm:ss.SSS',
+            'DD.MM.YYYY HH:mm:ss',
+            'DD.MM.YYYY HH:mm',
+            'DD.MM.YYYY',
+            // UK style formats
+            'DD/MM/YYYY HH:mm:ss.SSSZ',
+            'DD/MM/YYYY HH:mm:ss.SSS',
+            'DD/MM/YYYY HH:mm:ss',
+            'DD/MM/YYYY HH:mm',
+            'DD/MM/YYYY',
+            // US style formats (will only match when the above won't match or the US format is longer etc.
+            'MM/DD/YYYY HH:mm:ss.SSSZ',
+            'MM/DD/YYYY HH:mm:ss.SSS',
+            'MM/DD/YYYY HH:mm:ss',
+            'MM/DD/YYYY HH:mm',
+            'MM/DD/YYYY',
+            // local verbose formats
+            'DD. MMMM YYYY HH:mm:ss.SSS',
+            'DD. MMMM YYYY HH:mm:ss',
+            'DD. MMMM YYYY HH:mm',
+            // local verbose formats with weekday
+            'dddd, DD. MMMM YYYY HH:mm:ss.SSS',
+            'dddd, DD. MMMM YYYY HH:mm:ss',
+            'dddd, DD. MMMM YYYY HH:mm'
         ],
 
         //displayFormat: 'YYYY-MM-DD HH:mm:ss',
@@ -303,6 +320,15 @@
             },
             getCurrentElement: function() {
                 return getVisibleDayElement(getCurrentDate());
+            },
+            getDisplayMode: function() {
+                var display_mode = 'table';
+                _.forIn(settings.cssClasses.displayMode, function(value, key, object) {
+                    if ($elements.picker.hasClass(settings.cssClasses.displayMode[key])) {
+                        display_mode = key;
+                    }
+                });
+                return display_mode;
             },
             getInputElement: function() {
                 return $elements.input;

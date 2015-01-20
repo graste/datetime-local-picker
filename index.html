@@ -28,6 +28,7 @@
     <input dir="rtl" type="datetime-local" value="2015-01-14T13:45:00.123">
 </div>
 -->
+<button id="toggleDisplayMode">toggle display mode</button>
 
 <script src="bower_components/pointerevents-polyfill/pointerevents.min.js"></script>
 <script src="bower_components/requirejs/require.js"></script>
@@ -72,16 +73,16 @@ require([
         direction: $('html').attr('dir'),
         hideOnSet: true,
         minWeeksPerMonth: 6,
-        //numberOfMonths: -2,
+        numberOfMonths: 1,
         /*numberOfMonths: {
             before: 2,
             after: 6
         },*/
         constraints: {
-            minDate: '2010-01-01',
+            minDate: '2001-01-01',
             maxDate: '2030-05-14T13:59:59.999'
         },
-        disableWeekends: true,
+        disableWeekends: false,
         disabledDates: [
             new Date('2015-01-20'),
             '2015-01-27',
@@ -105,6 +106,14 @@ require([
     });
 
     foo = picker;
+
+    $('#toggleDisplayMode').on('click', function() {
+        if (picker.getDisplayMode() === 'table') {
+            picker.setDisplayMode('list');
+        } else {
+            picker.setDisplayMode('table');
+        }
+    });
 });
 
 </script>
