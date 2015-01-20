@@ -90,6 +90,8 @@
         disableWeekends: false,
         disabledDates: [],
 
+        autoFitViewport: true, // decrease font-size to fit the calendar into the viewport
+
         onBeforeShow: null,
         onBeforeHide: null,
         onShow: null,
@@ -203,7 +205,6 @@
         defaultSeconds: 0,
         defaultMilliseconds: 0,
         yearRange: [0, 10],
-        autoFitViewport: true,
         showOnFocus: true,
         showOnAutofocus: true,
         showYearSelect: true,
@@ -719,7 +720,6 @@
             }
 
             updateView();
-            fitViewport();
 
             return true;
         }
@@ -729,16 +729,20 @@
             highlightCurrentDate();
             focusSelectedDate();
             highlightInputElement();
+            if (settings.autoFitViewport) {
+                fitViewport();
+            }
         }
 
         function fitViewport() {
             var $calendar = $elements.content.find("."+settings.cssClasses.calendar);
             $elements.content.css("font-size", "");
 
-            var ratio = screen.availWidth / $calendar.width();
+            var width = $calendar.outerWidth();
+            var ratio = screen.availWidth / width;
             var font_size = parseInt($elements.content.css("font-size"), 10);
 
-            if (settings.debug) { console.log('font_size=' + font_size, 'calendar_width=' + $calendar.width()); }
+            if (settings.debug) { console.log('font_size=' + font_size, 'calendar_width=' + width); }
 
             if (ratio < 1) {
                 font_size *= ratio;
@@ -814,10 +818,10 @@
                 _.defer(settings.onBeforeShow, createEvent('beforeShow'));
             }
             unbindPickerEventHandlers();
-            draw();
-            bindPickerEventHandlers();
             $elements.picker.addClass(settings.cssClasses.isVisible);
             setVisible(true);
+            draw();
+            bindPickerEventHandlers();
             if (_.isFunction(settings.onShow)) {
                 _.defer(settings.onShow, createEvent('show'));
             }
@@ -1074,7 +1078,6 @@
                 settings.templates.calendars(template_data)
             );
             updateView();
-            fitViewport();
         }
 
         function prepareCalendars(date) {
@@ -1454,6 +1457,7 @@
             settings.inputFormats.push(settings.displayFormat);
 
             settings.hideOnSet = !!settings.hideOnSet;
+            settings.autoFitViewport = !!settings.autoFitViewport;
             settings.disableWeekends = !!settings.disableWeekends;
             settings.debug = !!settings.debug;
 
