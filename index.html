@@ -72,12 +72,9 @@ require([
         locale: $('html').attr('lang'),
         direction: $('html').attr('dir'),
         hideOnSet: true,
+        defaultDisplayMode: 'list',
         minWeeksPerMonth: 6,
         numberOfMonths: 1,
-        /*numberOfMonths: {
-            before: 2,
-            after: 6
-        },*/
         constraints: {
             minDate: '2001-01-01',
             maxDate: '2030-05-14T13:59:59.999'
@@ -105,8 +102,6 @@ require([
         debug: false
     });
 
-    foo = picker;
-
     $('#toggleDisplayMode').on('click', function() {
         if (picker.getDisplayMode() === 'table') {
             picker.setDisplayMode('list');
@@ -114,6 +109,8 @@ require([
             picker.setDisplayMode('table');
         }
     });
+
+    window.foo = picker;
 });
 
 </script>

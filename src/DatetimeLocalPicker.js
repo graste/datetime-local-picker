@@ -28,6 +28,8 @@
         direction: 'ltr', //isRTL: false,
         parseStrict: true,
         hideOnSet: false,
+        showOnFocus: false,
+        showOnAutofocus: true,
 
         // must be given per locale as moment doesn't include this
         // see https://github.com/moment/moment/issues/1947
@@ -209,10 +211,14 @@
             }
         },
 
+        defaultDisplayMode: 'table',
         displayModeMap: {
-            table: 'table',
-            block: 'list'
-        }/*,
+            table: 'table', // CSS display: table => table => cssClasses.displayMode.table
+            block: 'list'   // CSS display: block => list => cssClasses.displayMode.list
+        }
+
+
+        /*,
 
         // from here on: TBD
 
@@ -222,8 +228,6 @@
         defaultSeconds: 0,
         defaultMilliseconds: 0,
         yearRange: [0, 10],
-        showOnFocus: true,
-        showOnAutofocus: true,
         showYearSelect: true,
         showMonthSelect: true,
         showWeekNumbers: true,
@@ -310,6 +314,14 @@
 
         if (settings.debug) { console.log('settings', settings); }
 
+        // when the input element has the autofocus attribute set, show the picker instantly w/o further interaction
+        if (settings.showOnAutofocus && $elements.input.attr('autofocus')) {
+            $elements.input.removeAttr('autofocus');
+            showPicker();
+        }
+
+        setDisplayMode(settings.defaultDisplayMode);
+
         // return public api
         return {
             getCurrentDate: function() {
@@ -322,13 +334,7 @@
                 return getVisibleDayElement(getCurrentDate());
             },
             getDisplayMode: function() {
-                var display_mode = 'table';
-                _.forIn(settings.cssClasses.displayMode, function(value, key, object) {
-                    if ($elements.picker.hasClass(settings.cssClasses.displayMode[key])) {
-                        display_mode = key;
-                    }
-                });
-                return display_mode;
+                return getDisplayMode();
             },
             getInputElement: function() {
                 return $elements.input;
@@ -338,6 +344,9 @@
             },
             getMaxDate: function() {
                 return settings.constraints.maxDate.clone();
+            },
+            getNumberOfMonths: function(nom) {
+                return settings.numberOfMonths;
             },
             getOutputElement: function() {
                 return $elements.output;
@@ -397,12 +406,7 @@
                 return this;
             },
             setDisplayMode: function(name) {
-                if (_.has(settings.cssClasses.displayMode, name)) {
-                    _.forIn(settings.cssClasses.displayMode, function(value, key, object) {
-                        $elements.picker.removeClass(value);
-                    });
-                    $elements.picker.addClass(settings.cssClasses.displayMode[name]);
-                }
+                setDisplayMode(name);
                 return this;
             },
             setNumberOfMonths: function(nom) {
@@ -482,6 +486,11 @@
 
         function bindEventHandlers() {
             //var pointerevents = ['pointerdown', 'pointerup', 'pointermove', 'pointerover', 'pointerout', 'pointerenter', 'pointerleave', 'click'].join(' ');
+
+
+            if (settings.showOnFocus) {
+                $elements.input.on('focus.' + settings.logPrefix, showPicker);
+            }
 
             $elements.input.on('change.' + settings.logPrefix, handleInputElementChange);
             $elements.input.on('keydown.' + settings.logPrefix, handleInputElementKeydown);
@@ -608,23 +617,6 @@
             } else {
                 if (settings.debug) { console.log('Unhandled click on something.', $(ev.target)); }
             }
-        }
-
-        function getDisplayMode(date) {
-            var value = 'unknown';
-
-            var $selected_day = getDayElement(date);
-            if ($selected_day.length > 0) {
-                value = $selected_day.closest('.'+settings.cssClasses.calendarBody).css('display');
-            } else {
-                value = $elements.content.find('.'+settings.cssClasses.calendarBody).first().css('display');
-            }
-
-            if (value && _.has(settings.displayModeMap, value)) {
-                return settings.displayModeMap[value];
-            }
-
-            return value;
         }
 
         function handlePickerKeydown(ev) {
@@ -776,6 +768,58 @@
             }
 
             if (settings.debug) { console.log('screen.availWidth=' + screen.availWidth, 'ratio=' + ratio); }
+        }
+
+        function guessDisplayMode(date) {
+            var value = 'unknown';
+
+            var $selected_day = getDayElement(date);
+            if ($selected_day.length > 0) {
+                value = $selected_day.closest('.'+settings.cssClasses.calendarBody).css('display');
+            } else {
+                value = $elements.content.find('.'+settings.cssClasses.calendarBody).first().css('display');
+            }
+
+            if (value && _.has(settings.displayModeMap, value)) {
+                return settings.displayModeMap[value];
+            }
+
+            return value;
+        }
+
+        function getDisplayMode() {
+            var display_mode = undefined;
+
+            // is there a known class set on the picker element?
+            _.forIn(settings.cssClasses.displayMode, function(value, key, object) {
+                if ($elements.picker.hasClass(settings.cssClasses.displayMode[key])) {
+                    display_mode = key;
+                }
+            });
+
+            // if no class is set, try to guess the displayMode via the CSS display property value
+            if (!display_mode) {
+                display_mode = guessDisplayMode(getCurrentDate());
+            }
+
+            if (!display_mode) {
+                display_mode = settings.defaultDisplayMode;
+            }
+
+            return display_mode;
+        }
+
+        // force a specific displayMode via setting a class on the picker element
+        function setDisplayMode(name) {
+            if (_.has(settings.cssClasses.displayMode, name)) {
+                _.forIn(settings.cssClasses.displayMode, function(value, key, object) {
+                    $elements.picker.removeClass(value);
+                });
+                $elements.picker.addClass(settings.cssClasses.displayMode[name]);
+                return true;
+            }
+
+            return false;
         }
 
         function createEvent(event_name, event_data) {
@@ -1485,12 +1529,28 @@
             settings.hideOnSet = !!settings.hideOnSet;
             settings.autoFitViewport = !!settings.autoFitViewport;
             settings.disableWeekends = !!settings.disableWeekends;
+            settings.showOnAutofocus = !!settings.showOnAutofocus;
+            settings.showOnFocus = !!settings.showOnFocus;
             settings.debug = !!settings.debug;
 
             if (!_.isString(settings.direction) || (_.isString(settings.direction) && ['rtl', 'ltr'].indexOf(settings.direction) === -1)) {
                 throw new Error('Setting direction must be "ltr" or "rtl". To render correctly try to set the "dir" attribute on the HTML element and provide it as the direction setting value.');
             }
             settings.isRTL = settings.direction === 'rtl' ? true : false;
+
+            settings.defaultDisplayMode = settings.defaultDisplayMode ? settings.defaultDisplayMode : 'table';
+            if (!_.has(settings.cssClasses.displayMode, settings.defaultDisplayMode)) {
+                throw new Error('Setting cssClasses.displayMode.'+settings.defaultDisplayMode+' does not exist, but value of defaultDisplayMode suggests it should.');
+            }
+            var exists = false;
+            _.forIn(settings.displayModeMap, function(value, key, object) {
+                if (value === settings.defaultDisplayMode) {
+                    exists = true;
+                }
+            });
+            if (!exists) {
+                throw new Error('The displayModeMap settings does not have a mapping for a CSS display property value to the given defaultDisplayMode name.');
+            }
 
             updateNumberOfMonths(settings.numberOfMonths);
             updateDateConstraints();
