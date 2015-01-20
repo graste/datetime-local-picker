@@ -171,7 +171,7 @@
                 hintToday: 'heute',
                 hintCurrent: 'aktuell',
                 hintSelectable: 'wählen',
-                hintHover: 'hover'
+                hintHover: ''
             },
             en: {
                 selectToday: 'select today',
@@ -186,7 +186,7 @@
                 hintToday: 'today',
                 hintCurrent: 'current',
                 hintSelectable: 'select',
-                hintHover: 'hover'
+                hintHover: ''
             }
         },
 
