@@ -195,11 +195,11 @@
                 hintHover: ''
             },
             en: {
-                selectToday: 'select today',
-                selectCurrent: 'select current',
+                selectToday: 'today',
+                selectCurrent: 'current',
                 prevMonth: 'previous month',
                 nextMonth: 'next month',
-                week: 'Calendar Week',
+                week: 'calendar week',
                 gotoPrevMonthTitle: 'show previous month',
                 gotoNextMonthTitle: 'show next month',
                 gotoPrevYearTitle: 'jump back one year',
@@ -1492,6 +1492,13 @@
             settings.toggleElement = settings.toggleElement || settings.inputElement;
 
             // check for a valid given locale to use and store that in settings (as it might be invalid/unknown)
+            settings.locale = settings.locale ? settings.locale : 'en-gb';
+            if (settings.locale === 'de-de') {
+                settings.locale = 'de';
+            }
+            if (settings.locale === 'en') {
+                settings.locale = 'en-gb';
+            }
             var m = parseDate();
             m.locale(settings.locale);
             settings.locale = m.locale(); // actual locale being used
