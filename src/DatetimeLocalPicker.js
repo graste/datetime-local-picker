@@ -462,10 +462,11 @@
             var parsed_date;
 
             if (_.isString(mixed)) {
-                parsed_date = moment(mixed, input_formats || settings.inputFormats, settings.parseStrict);
+                parsed_date = moment(mixed, input_formats || settings.inputFormats, locale || settings.locale, settings.parseStrict);
             } else {
                 parsed_date = moment(mixed);
             }
+
             parsed_date.locale(locale || settings.locale);
 
             return parsed_date;
@@ -788,7 +789,7 @@
         }
 
         function getDisplayMode() {
-            var display_mode = undefined;
+            var display_mode;
 
             // is there a known class set on the picker element?
             _.forIn(settings.cssClasses.displayMode, function(value, key, object) {
