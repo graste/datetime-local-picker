@@ -170,6 +170,7 @@
             calendars: 'calendars',
             calendarsHeader: 'calendars__header',
             calendarsBody: 'calendars__body',
+            calendarsBodyInner: 'calendars__body_inner',
             calendarsFooter: 'calendars__footer',
             calendarsSingle: 'calendars--single',
             calendarsMultiple: 'calendars--multiple',
