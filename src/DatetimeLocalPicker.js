@@ -113,8 +113,10 @@
 
         onBeforeShow: null,
         onBeforeHide: null,
+        onBeforeDraw: null,
         onShow: null,
         onHide: null,
+        onDraw: null,
         onSetCurrentDate: null,
         onSetSelectedDate: null,
 
@@ -1143,12 +1145,20 @@
         }
 
         function draw(date) {
+            if (_.isFunction(settings.onBeforeDraw)) {
+                settings.onBeforeDraw(createEvent('beforeDraw'));
+            }
+
             date = date || getSelectedDate() || getCurrentDate();
             var template_data = prepareCalendars(date);
             $elements.content.html(
                 settings.templates.calendars(template_data)
             );
             updateView();
+
+            if (_.isFunction(settings.onDraw)) {
+                _.defer(settings.onDraw, createEvent('draw'));
+            }
         }
 
         function prepareCalendars(date) {
