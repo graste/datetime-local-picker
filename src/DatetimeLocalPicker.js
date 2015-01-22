@@ -141,6 +141,7 @@
             weekend: 'weekend',
             week: 'week',
             weekNumber: 'calendar-week',
+            weekExcess: 'week--excess',
             day: 'day',
             dayExcess: 'day--excess',
             dayPrevMonth: 'day--prev-month',
@@ -1337,6 +1338,7 @@
             var week_data = {};
             var render_date = start_date.clone();
             var idx;
+            var excess_counter = 0;
 
             for (idx = 0; idx < num_days; idx++) {
 
@@ -1351,8 +1353,10 @@
                         nameLong: render_date.format('['+settings.i18n[settings.locale].week+'] W'),
                         nameLongYear: render_date.format('['+settings.i18n[settings.locale].week+'] W YYYY'),
                         content: render_date.format('WW'),
-                        days: []
+                        days: [],
+                        excess: false
                     };
+                    excess_counter = 0;
                 }
 
                 day_valid = true;
@@ -1365,8 +1369,10 @@
                 }
                 if (idx < days_before) {
                     day_css += ' ' + settings.cssClasses.dayExcess + ' ' + settings.cssClasses.dayPrevMonth;
+                    excess_counter++;
                 } else if (idx >= (days_before + days_in_month)) {
                     day_css += ' ' + settings.cssClasses.dayExcess + ' ' + settings.cssClasses.dayNextMonth;
+                    excess_counter++;
                 }
                 if (isDisabled(render_date)) {
                     day_css += ' ' + settings.cssClasses.isDisabled;
@@ -1405,6 +1411,10 @@
                     if (settings.templates.calendarWeek && _.isFunction(settings.templates.calendarWeek)) {
                         week_data.content = settings.templates.calendarWeek(week_data);
                     }
+
+                    week_data.excess = (excess_counter >= days_per_week);
+                    console.log(week_data);
+
                     weeks_data.push(week_data);
                 }
 

@@ -34,7 +34,7 @@
                     </div>
                     <div class="weeks">
                         <% _.forEach(calendar.weeks, function(week) { %>
-                        <div class="<%- week.css %>">
+                        <div class="<%- week.css %> <%- week.excess ? settings.cssClasses.weekExcess : "" %>">
                             <div class="<%- week.weekNumberCSS %>">
                                 <abbr class="min" title="<%- week.nameLongYear %>"><%- week.nameMin %></abbr>
                                 <abbr class="long" title="<%- week.nameLongYear %>"><%- week.nameLong %></abbr>
