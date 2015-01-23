@@ -1412,8 +1412,9 @@
                         week_data.content = settings.templates.calendarWeek(week_data);
                     }
 
-                    week_data.excess = (excess_counter >= days_per_week);
-                    console.log(week_data);
+                    week_data.excess = (excess_counter >= days_per_week); // whole week has excess days
+
+                    if (settings.debug) { console.log('week_data', week_data); }
 
                     weeks_data.push(week_data);
                 }
