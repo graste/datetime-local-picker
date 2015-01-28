@@ -892,6 +892,7 @@
             $elements.picker.addClass(settings.cssClasses.isVisible);
             setVisible(true);
             draw();
+disableScrolling();
             bindPickerEventHandlers();
             if (_.isFunction(settings.onShow)) {
                 _.defer(settings.onShow, createEvent('show'));
@@ -903,6 +904,7 @@
                 _.defer(settings.onBeforeHide, createEvent('beforeHide'));
             }
             unbindPickerEventHandlers();
+enableScrolling();
             $elements.picker.removeClass(settings.cssClasses.isVisible);
             setVisible(false);
             if (_.isFunction(settings.onHide)) {
@@ -1654,6 +1656,27 @@
                 return moment_or_year.daysInMonth();
             }
             return moment(''+(+moment_or_year)+'-'+(+month), 'YYYY-MM').daysInMonth();
+        }
+
+        function disableScrolling() {
+            if ($(document).height() > $(window).height()) {
+                var scroll_top = $(window).scrollTop();
+                if (scroll_top < 0) {
+                    scroll_top = 0;
+                }
+console.log('scroll_top: '+scroll_top);
+                $('html').addClass('noscroll').css('top', -scroll_top);
+            }
+        }
+
+        function enableScrolling() {
+            var scroll_top = parseInt($('html').css('top'), 10);
+//            if (scroll_top < 0) {
+//                scroll_top = 0;
+//            }
+console.log('scroll_top: '+scroll_top);
+            $('html').removeClass('noscroll');
+            $('html,body').scrollTop(-scroll_top);
         }
     }; // end of constructor function
 }));

@@ -1,3 +1,9 @@
+html.noscroll {
+    position: fixed;
+    overflow-y: scroll;
+    width: 100%;
+}
+
 @mixin popup($horizontal: center, $vertical: middle, $fill: true, $size: 50%) {
 
     //it shouldn't matter if someone says "center" or "middle"
