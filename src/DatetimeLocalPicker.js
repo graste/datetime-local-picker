@@ -896,7 +896,7 @@
             $elements.picker.addClass(settings.cssClasses.isVisible);
             setVisible(true);
             draw();
-disableScrolling();
+            disableScrolling();
             bindPickerEventHandlers();
             if (_.isFunction(settings.onShow)) {
                 _.defer(settings.onShow, createEvent('show'));
@@ -908,7 +908,7 @@ disableScrolling();
                 _.defer(settings.onBeforeHide, createEvent('beforeHide'));
             }
             unbindPickerEventHandlers();
-enableScrolling();
+            enableScrolling();
             $elements.picker.removeClass(settings.cssClasses.isVisible);
             setVisible(false);
             if (_.isFunction(settings.onHide)) {
@@ -1686,17 +1686,12 @@ enableScrolling();
                 if (scroll_top < 0) {
                     scroll_top = 0;
                 }
-console.log('scroll_top: '+scroll_top);
                 $('html').addClass('noscroll').css('top', -scroll_top);
             }
         }
 
         function enableScrolling() {
             var scroll_top = parseInt($('html').css('top'), 10);
-//            if (scroll_top < 0) {
-//                scroll_top = 0;
-//            }
-console.log('scroll_top: '+scroll_top);
             $('html').removeClass('noscroll');
             $('html,body').scrollTop(-scroll_top);
         }
