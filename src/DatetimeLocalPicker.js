@@ -113,8 +113,10 @@
 
         onBeforeShow: null,
         onBeforeHide: null,
+        onBeforeDraw: null,
         onShow: null,
         onHide: null,
+        onDraw: null,
         onSetCurrentDate: null,
         onSetSelectedDate: null,
 
@@ -139,6 +141,7 @@
             weekend: 'weekend',
             week: 'week',
             weekNumber: 'calendar-week',
+            weekExcess: 'week--excess',
             day: 'day',
             dayExcess: 'day--excess',
             dayPrevMonth: 'day--prev-month',
@@ -168,6 +171,7 @@
             calendars: 'calendars',
             calendarsHeader: 'calendars__header',
             calendarsBody: 'calendars__body',
+            calendarsBodyInner: 'calendars__body_inner',
             calendarsFooter: 'calendars__footer',
             calendarsSingle: 'calendars--single',
             calendarsMultiple: 'calendars--multiple',
@@ -1145,12 +1149,20 @@ enableScrolling();
         }
 
         function draw(date) {
+            if (_.isFunction(settings.onBeforeDraw)) {
+                settings.onBeforeDraw(createEvent('beforeDraw'));
+            }
+
             date = date || getSelectedDate() || getCurrentDate();
             var template_data = prepareCalendars(date);
             $elements.content.html(
                 settings.templates.calendars(template_data)
             );
             updateView();
+
+            if (_.isFunction(settings.onDraw)) {
+                _.defer(settings.onDraw, createEvent('draw'));
+            }
         }
 
         function prepareCalendars(date) {
@@ -1328,6 +1340,7 @@ enableScrolling();
             var week_data = {};
             var render_date = start_date.clone();
             var idx;
+            var excess_counter = 0;
 
             for (idx = 0; idx < num_days; idx++) {
 
@@ -1342,8 +1355,10 @@ enableScrolling();
                         nameLong: render_date.format('['+settings.i18n[settings.locale].week+'] W'),
                         nameLongYear: render_date.format('['+settings.i18n[settings.locale].week+'] W YYYY'),
                         content: render_date.format('WW'),
-                        days: []
+                        days: [],
+                        excess: false
                     };
+                    excess_counter = 0;
                 }
 
                 day_valid = true;
@@ -1356,8 +1371,10 @@ enableScrolling();
                 }
                 if (idx < days_before) {
                     day_css += ' ' + settings.cssClasses.dayExcess + ' ' + settings.cssClasses.dayPrevMonth;
+                    excess_counter++;
                 } else if (idx >= (days_before + days_in_month)) {
                     day_css += ' ' + settings.cssClasses.dayExcess + ' ' + settings.cssClasses.dayNextMonth;
+                    excess_counter++;
                 }
                 if (isDisabled(render_date)) {
                     day_css += ' ' + settings.cssClasses.isDisabled;
@@ -1396,6 +1413,11 @@ enableScrolling();
                     if (settings.templates.calendarWeek && _.isFunction(settings.templates.calendarWeek)) {
                         week_data.content = settings.templates.calendarWeek(week_data);
                     }
+
+                    week_data.excess = (excess_counter >= days_per_week); // whole week has excess days
+
+                    if (settings.debug) { console.log('week_data', week_data); }
+
                     weeks_data.push(week_data);
                 }
 

@@ -132,6 +132,7 @@ require([
         ],
         templates: {
             calendars: calendars_tmpl
+            //calendars: $('#calendars_template').text()
         },
         /*onSetCurrentDate: onSet,
         onSetSelectedDate: onSelect,
@@ -155,5 +156,10 @@ require([
 
 </script>
 
+<!-- alternative template loading: inline via script element -->
+<script type="text/html" id="calendars_template">
+// put calendars.tmpl.html content here and
+// give it to the datepicker via $('#calendars_template').text()
+</script>
 </body>
 </html>
