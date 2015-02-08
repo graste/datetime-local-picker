@@ -120,6 +120,12 @@
         onSetCurrentDate: null,
         onSetSelectedDate: null,
 
+        defaultDisplayMode: 'table',
+        displayModeMap: {
+            table: 'table', // CSS display: table => table => cssClasses.displayMode.table
+            block: 'list'   // CSS display: block => list => cssClasses.displayMode.list
+        },
+
         templates: {
             picker: '<div class="datepicker"><div class="datepicker__content"></div></div>',
             calendars: ''
@@ -213,13 +219,8 @@
                 hintSelectable: 'select',
                 hintHover: ''
             }
-        },
-
-        defaultDisplayMode: 'table',
-        displayModeMap: {
-            table: 'table', // CSS display: table => table => cssClasses.displayMode.table
-            block: 'list'   // CSS display: block => list => cssClasses.displayMode.list
         }
+
 
 
         /*,
@@ -844,6 +845,7 @@
         function gotoPreviousSelectableDate(prev, period) {
             prev = parseDate(prev);
             period = period || 'day';
+
             do {
                 // TODO decrease jump period unit if necessary?
                 if (settings.isRTL && period === 'day') {
@@ -863,6 +865,7 @@
         function gotoNextSelectableDate(next, period) {
             next = parseDate(next);
             period = period || 'day';
+
             do {
                 // TODO decrease jump period unit if necessary?
                 if (settings.isRTL && period === 'day') {
@@ -890,13 +893,15 @@
 
         function showPicker() {
             if (_.isFunction(settings.onBeforeShow)) {
-                _.defer(settings.onBeforeShow, createEvent('beforeShow'));
+                settings.onBeforeShow(createEvent('beforeShow'));
             }
+
             unbindPickerEventHandlers();
             $elements.picker.addClass(settings.cssClasses.isVisible);
             setVisible(true);
             draw();
             bindPickerEventHandlers();
+
             if (_.isFunction(settings.onShow)) {
                 _.defer(settings.onShow, createEvent('show'));
             }
@@ -904,11 +909,13 @@
 
         function hidePicker() {
             if (_.isFunction(settings.onBeforeHide)) {
-                _.defer(settings.onBeforeHide, createEvent('beforeHide'));
+                settings.onBeforeHide(createEvent('beforeHide'));
             }
+
             unbindPickerEventHandlers();
             $elements.picker.removeClass(settings.cssClasses.isVisible);
             setVisible(false);
+
             if (_.isFunction(settings.onHide)) {
                 _.defer(settings.onHide, createEvent('hide'));
             }
@@ -1147,12 +1154,18 @@
         }
 
         function draw(date) {
-            if (_.isFunction(settings.onBeforeDraw)) {
-                settings.onBeforeDraw(createEvent('beforeDraw'));
-            }
-
             date = date || getSelectedDate() || getCurrentDate();
             var template_data = prepareCalendars(date);
+
+            if (_.isFunction(settings.onBeforeDraw)) {
+                settings.onBeforeDraw(
+                    createEvent('beforeDraw', {
+                        'date': date,
+                        'template_data': template_data
+                    })
+                );
+            }
+
             $elements.content.html(
                 settings.templates.calendars(template_data)
             );
