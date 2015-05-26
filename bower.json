@@ -11,14 +11,14 @@
     "amd"
   ],
   "dependencies": {
-    "lodash": "~3.9.3",
+    "lodash": "~3",
     "lodash-template-loader": "~1.0.0",
-    "jquery": "~2.1.4",
-    "moment": "~2.10.3",
+    "jquery": "~2",
+    "moment": "~2",
     "pointerevents-polyfill": "*"
   },
   "devDependencies": {
-    "requirejs": "~2.1.17"
+    "requirejs": "~2"
   },
   "keywords": [
     "javascript",
