@@ -22,13 +22,29 @@
     >
     <button class="dtp__trigger" id="publishDateToggle">toggle</button>
 </div>
+<button id="toggleDisplayMode">toggle display mode</button>
+
+<br/>
+
+<div class="dtp" touch-action="scroll">
+    <label for="emptyDate" class="dtp__label">Empty non-required date:</label>
+    <input type="text" name="emptyDate" class="dtp__output" id="emptyDate">
+    <button class="dtp__trigger" id="emptyDateToggle">toggle</button>
+</div>
+
+<br/>
+
+<div class="dtp" touch-action="scroll">
+    <label for="emptyReqDate" class="dtp__label">Empty required date (not hiding on selection):</label>
+    <input type="text" name="emptyReqDate" class="dtp__output" id="emptyReqDate" required>
+    <button class="dtp__trigger" id="emptyReqDateToggle">toggle</button>
+</div>
 
 <!--
 <div>
     <input dir="rtl" type="datetime-local" value="2015-01-14T13:45:00.123">
 </div>
 -->
-<button id="toggleDisplayMode">toggle display mode</button>
 
 <script src="bower_components/pointerevents-polyfill/pointerevents.min.js"></script>
 <script src="bower_components/requirejs/require.js"></script>
@@ -40,7 +56,7 @@ require.config({
     enforceDefine: true,
     paths: {
         'jquery': 'bower_components/jquery/dist/jquery.min',
-        'lodash': 'bower_components/lodash/dist/lodash.min',
+        'lodash': 'bower_components/lodash/lodash.min',
         'moment': 'bower_components/moment/min/moment-with-locales.min',
         'ldsh':   'bower_components/lodash-template-loader/loader'
     },
@@ -112,6 +128,37 @@ require([
     });
 
     window.foo = picker;
+
+    var emptypicker = new dtlp({
+        inputElement: '#emptyDate',
+        toggleElement: '#emptyDateToggle',
+        locale: $('html').attr('lang'),
+        direction: $('html').attr('dir'),
+        hideOnSet: true,
+        constraints: {
+            minDate: '2001-01-01',
+            maxDate: '2030-05-14T13:59:59.999'
+        },
+        templates: {
+            calendars: calendars_tmpl
+        }
+    });
+    window.bar = emptypicker;
+
+    var emptyreqpicker = new dtlp({
+        inputElement: '#emptyReqDate',
+        toggleElement: '#emptyReqDateToggle',
+        locale: $('html').attr('lang'),
+        direction: $('html').attr('dir'),
+        constraints: {
+            minDate: '2001-01-01',
+            maxDate: '2030-05-14T13:59:59.999'
+        },
+        templates: {
+            calendars: calendars_tmpl
+        }
+    });
+    window.baz = emptyreqpicker;
 });
 
 </script>

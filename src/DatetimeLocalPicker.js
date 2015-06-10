@@ -310,9 +310,9 @@
         var initial_moment = parseDate(initial_value);
         if (isValidDate(initial_moment)) {
             setDate(initial_moment);
-            $elements.input.removeClass(settings.cssClasses.inputInvalid);
+            markInputElementValid();
         } else {
-            $elements.input.addClass(settings.cssClasses.inputInvalid);
+            markInputElementInvalid();
             // without valid initial date use today as the initially selected date
             selectDate(parseDate());
         }
@@ -698,9 +698,9 @@
         function handleInputElementPointerUp(ev) {
             var parsed_date = parseDate($elements.input.val());
             if (isValidDate(parsed_date)) {
-                $elements.input.removeClass(settings.cssClasses.inputInvalid);
+                markInputElementValid();
             } else {
-                $elements.input.addClass(settings.cssClasses.inputInvalid);
+                markInputElementInvalid();
             }
         }
 
@@ -923,10 +923,23 @@
 
         function highlightInputElement() {
             if (isValidDate(getCurrentDate())) {
-                $elements.input.removeClass(settings.cssClasses.inputInvalid);
+                markInputElementValid();
             } else {
-                $elements.input.addClass(settings.cssClasses.inputInvalid);
+                markInputElementInvalid();
             }
+        }
+
+        function markInputElementValid() {
+            $elements.input.removeClass(settings.cssClasses.inputInvalid);
+        }
+
+        function markInputElementInvalid() {
+            // empty valued input elements are not invalid when they're not required
+            if ($elements.input.val().length === 0 && !$elements.input.prop('required')) {
+                return;
+            }
+
+            $elements.input.addClass(settings.cssClasses.inputInvalid);
         }
 
         function highlightToday() {
@@ -1125,9 +1138,9 @@
             var parsed_date = parseDate(date || $elements.output.val());
             if (isValidDate(parsed_date)) {
                 $elements.input.val(parsed_date.format(settings.displayFormat));
-                $elements.input.removeClass(settings.cssClasses.inputInvalid);
+                markInputElementValid();
             } else {
-                $elements.input.addClass(settings.cssClasses.inputInvalid);
+                markInputElementInvalid();
                 //throw new Error('Output element contains an invalid moment: ' + parsed_date);
             }
         }
