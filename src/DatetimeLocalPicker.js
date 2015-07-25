@@ -109,6 +109,8 @@
         disableWeekends: false,
         disabledDates: [],
 
+        highlightedDates: [],
+
         autoFitViewport: true, // decrease font-size to fit the calendar into the viewport
 
         onBeforeShow: null,
@@ -1475,6 +1477,29 @@
             });
 
             return !is_valid;
+        }
+
+        function getSpecialDayData(date) {
+            // check every specialDates entry and get dynamic data for day_data object
+            var is_special = _.every(settings.specialDates, function(value, index, collection) {
+                if (_.isFunction(value)) {
+                    var special_day_data = value(parseDate(render_date), getSelectedDate(), getCurrentDate());
+                    if (_.isPlainObject(special_day_data)) {
+                        return special_day_data;
+                    } else if (_.isString(special_day_data)) {
+                        return { css: special_day_data };
+                    } else {
+                        return { css: '' };
+                } else {
+                    if (parseDate(value).isSame(render_date, 'day')) {
+                        return {
+                            css: settings.cssClasses.isSpecial
+                        };
+                    } else {
+                        return { css: '' };
+                    }
+                }
+            });
         }
 
         function prepareElements() {
