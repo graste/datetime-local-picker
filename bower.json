@@ -14,10 +14,10 @@
     "lodash": "~3",
     "lodash-template-loader": "~1.0.0",
     "jquery": "~2",
-    "moment": "~2",
-    "pointerevents-polyfill": "*"
+    "moment": "~2"
   },
   "devDependencies": {
+    "pointerevents-polyfill": "*",
     "requirejs": "~2"
   },
   "keywords": [
