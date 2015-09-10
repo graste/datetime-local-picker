@@ -442,6 +442,10 @@
                 togglePicker();
                 return this;
             },
+            clear: function() {
+                clear();
+                return this;
+            },
             toLocaleString: function() {
                 return getCurrentDate().toString();
             },
@@ -700,6 +704,7 @@
             if (isValidDate(parsed_date)) {
                 markInputElementValid();
             } else {
+                markInputElementValid();
                 markInputElementInvalid();
             }
         }
@@ -725,9 +730,14 @@
         }
 
         function handleInputElementChange(ev) {
-            var parsed_date = parseDate($elements.input.val());
-            if (!setDate(parsed_date)) {
-                resetInputElementDate(getCurrentDate());
+            var val = $elements.input.val();
+            if (val === '') {
+                clear(); // forget currentDate; reset selectedDate as explicitely no value is wanted
+            } else {
+                var parsed_date = parseDate(val);
+                if (!setDate(parsed_date)) {
+                    resetInputElementDate(getCurrentDate());
+                }
             }
             updateViewOrRedraw();
         }
@@ -1121,16 +1131,32 @@
         }
 
         function setOutputElementDate(date) {
-            $elements.output.val(
-                //parseDate(date).utc().format(settings.outputFormat)
-                parseDate(date).toISOString()
-            );
+            if (date === '') {
+                $elements.output.val('');
+            } else {
+                $elements.output.val(
+                    //parseDate(date).utc().format(settings.outputFormat)
+                    parseDate(date).toISOString()
+                );
+            }
         }
 
         function setInputElementDate(date) {
-            $elements.input.val(
-                parseDate(date).local().format(settings.displayFormat)
-            );
+            if (date === '') {
+                $elements.input.val('');
+            } else {
+                $elements.input.val(
+                    parseDate(date).local().format(settings.displayFormat)
+                );
+            }
+        }
+
+        function clear() {
+            setOutputElementDate('');
+            setInputElementDate('');
+            state.currentDate = null;
+            markInputElementValid();
+            markInputElementInvalid();
         }
 
         // set input element value to the last known valid date
