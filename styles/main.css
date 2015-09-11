@@ -180,6 +180,7 @@ body {
     display: table-row-group; }
   .calendar .week {
     display: table-row; }
+  .calendar .calendar-week,
   .calendar .day {
     display: table-cell; }
   .calendar .day .min {
@@ -241,6 +242,7 @@ body {
     display: table-row-group; }
   .calendar--table .calendar .week {
     display: table-row; }
+  .calendar--table .calendar .calendar-week,
   .calendar--table .calendar .day {
     display: table-cell; }
   .calendar--table .calendar .day .min {
