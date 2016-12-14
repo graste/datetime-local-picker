@@ -1,6 +1,6 @@
 {
   "name": "datetime-local-picker",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Datetime picker with list and table mode via lodash templates using moment for date arithmetic",
   "main": "src/DatetimeLocalPicker.js",
   "scripts": {
@@ -11,20 +11,32 @@
     "url": "git+https://github.com/graste/datetime-local-picker.git"
   },
   "keywords": [
-    "date",
-    "time",
-    "datetime",
-    "picker",
-    "moment",
-    "lodash",
-    "template",
+    "dialog",
+    "html5",
+    "forms",
+    "input",
     "amd",
-    "dialog"
+    "template",
+    "lodash",
+    "moment",
+    "picker",
+    "datetime",
+    "time",
+    "date"
   ],
   "author": "Steffen Gransow",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/graste/datetime-local-picker/issues"
   },
-  "homepage": "https://github.com/graste/datetime-local-picker"
+  "homepage": "https://github.com/graste/datetime-local-picker",
+  "dependencies": {
+    "jquery": "^3.0.0",
+    "lodash": "^4.0.0",
+    "lodash-template-loader": "^2.0.0",
+    "moment": "^2.0.0"
+  },
+  "devDependencies": {
+    "requirejs": "^2.0.0"
+  }
 }
