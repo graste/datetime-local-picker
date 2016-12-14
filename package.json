@@ -1,6 +1,6 @@
 {
   "name": "datetime-local-picker",
-  "version": "0.1.1",
+  "version": "0.3.0",
   "description": "Datetime picker with list and table mode via lodash templates using moment for date arithmetic",
   "main": "src/DatetimeLocalPicker.js",
   "scripts": {
