@@ -40,6 +40,11 @@
     <button class="dtp__trigger" id="emptyReqDateToggle">toggle</button>
 </div>
 
+<div class="dtp" touch-action="scroll">
+    <span>Multi month in-page picker (see console and use shift+cursor keys for difference)</span>
+    <button class="dtp__trigger" id="inpageToggle">toggle</button>
+</div>
+
 <!--
 <div>
     <input dir="rtl" type="datetime-local" value="2015-01-14T13:45:00.123">
@@ -141,7 +146,9 @@ require([
         },
         templates: {
             calendars: calendars_tmpl
-        }
+        }/*,
+        onSetCurrentDate: onSet,
+        onSetSelectedDate: onSelect*/
     });
     window.bar = emptypicker;
 
@@ -156,9 +163,36 @@ require([
         },
         templates: {
             calendars: calendars_tmpl
-        }
+        }/*,
+        onSetCurrentDate: onSet,
+        onSetSelectedDate: onSelect*/
     });
     window.baz = emptyreqpicker;
+
+    var inpagepicker = new dtlp({
+        toggleElement: '#inpageToggle',
+        //pickerElement: '…'
+        locale: $('html').attr('lang'),
+        direction: $('html').attr('dir'),
+        hideOnSet: false,
+        numberOfMonths: 2,
+        constraints: {
+            minDate: '2001-01-01',
+            maxDate: '2030-05-14T13:59:59.999'
+        },
+        templates: {
+            picker: '<div class="datepicker-inpage"><div class="datepicker__content"></div></div>',
+            calendars: calendars_tmpl
+        },
+        cssClasses: {
+            picker: 'datepicker-inpage',
+            pickerContent: 'datepicker__content'
+        },
+        onSetCurrentDate: onSet,
+        onSetSelectedDate: onSelect
+    });
+    window.inpage = inpagepicker;
+
 });
 
 </script>

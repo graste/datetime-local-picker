@@ -18,11 +18,11 @@
     'use strict';
 
     var default_settings = {
-        inputElement: null,
-        outputElement: null,
-        toggleElement: null,
+        inputElement: null, // used for typing / modifying manually
+        outputElement: null, // output selected date to that input element
+        toggleElement: null, // element that toggles visibility of the picker
         pickerElement: null,
-        utcOffsetElement: null,
+        //utcOffsetElement: null,
 
         locale: 'en',
         direction: 'ltr', //isRTL: false,
@@ -648,44 +648,47 @@
             var display_mode = selected_date ? getDisplayMode(selected_date) : 'table';
             if (settings.debug) { console.log('display_mode='+display_mode); }
 
+            // -> change current_date instead of just moving around when shift key is pressed
+            var set_day = ev.shiftKey ? true : false;
+
             switch (ev.keyCode) {
                 case 37: // left
                     ev.preventDefault(); // prevent viewport scrolling
                     if (display_mode === 'table') {
-                        if (gotoPreviousSelectableDate(selected_date, 'day')) {
+                        if (gotoPreviousSelectableDate(selected_date, 'day', set_day)) {
                             updateViewOrRedraw();
                         }
                     } else if (display_mode === 'list') {
-                        if (gotoPreviousSelectableDate(selected_date, 'day')) {
+                        if (gotoPreviousSelectableDate(selected_date, 'day', set_day)) {
                             updateViewOrRedraw();
                         }
                     }
                     break;
                 case 39: // right
                     ev.preventDefault(); // prevent viewport scrolling
-                    if (display_mode === 'table' && gotoNextSelectableDate(selected_date, 'day')) {
+                    if (display_mode === 'table' && gotoNextSelectableDate(selected_date, 'day', set_day)) {
                         updateViewOrRedraw();
-                    } else if (display_mode === 'list' && gotoNextSelectableDate(selected_date, 'day')) {
+                    } else if (display_mode === 'list' && gotoNextSelectableDate(selected_date, 'day', set_day)) {
                         updateViewOrRedraw();
                     }
                     break;
                 case 38: // up
                     ev.preventDefault(); // prevent viewport scrolling
                     if (display_mode === 'table') {
-                        if (gotoPreviousSelectableDate(selected_date, 'week')) {
+                        if (gotoPreviousSelectableDate(selected_date, 'week', set_day)) {
                             updateViewOrRedraw();
                         }
                     } else if (display_mode === 'list') {
-                        if (gotoPreviousSelectableDate(selected_date, 'day')) {
+                        if (gotoPreviousSelectableDate(selected_date, 'day', set_day)) {
                             updateViewOrRedraw();
                         }
                     }
                     break;
                 case 40: // down
                     ev.preventDefault(); // prevent viewport scrolling
-                    if (display_mode === 'table' && gotoNextSelectableDate(selected_date, 'week')) {
+                    if (display_mode === 'table' && gotoNextSelectableDate(selected_date, 'week', set_day)) {
                         updateViewOrRedraw();
-                    } else if (display_mode === 'list' && gotoNextSelectableDate(selected_date, 'day')) {
+                    } else if (display_mode === 'list' && gotoNextSelectableDate(selected_date, 'day', set_day)) {
                         updateViewOrRedraw();
                     }
                     break;
@@ -852,9 +855,10 @@
             return _.merge(default_event, event_data);
         }
 
-        function gotoPreviousSelectableDate(prev, period) {
+        function gotoPreviousSelectableDate(prev, period, set_day) {
             prev = parseDate(prev);
             period = period || 'day';
+            set_day = set_day || false;
 
             do {
                 // TODO decrease jump period unit if necessary?
@@ -866,15 +870,16 @@
             } while (isDisabled(prev) && prev.isAfter(settings.constraints.minDate));
 
             if (isValidDate(prev)) {
-                return selectDay(prev);
+                return set_day ? setDay(prev) : selectDay(prev);
             }
 
             return false;
         }
 
-        function gotoNextSelectableDate(next, period) {
+        function gotoNextSelectableDate(next, period, set_day) {
             next = parseDate(next);
             period = period || 'day';
+            set_day = set_day || false;
 
             do {
                 // TODO decrease jump period unit if necessary?
@@ -886,7 +891,7 @@
             } while (isDisabled(next) && next.isBefore(settings.constraints.maxDate));
 
             if (isValidDate(next)) {
-                return selectDay(next);
+                return set_day ? setDay(next) : selectDay(next);
             }
 
             return false;
